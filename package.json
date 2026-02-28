@@ -1,0 +1,55 @@
+{
+  "name": "figma-html-import",
+  "version": "0.1.0",
+  "description": "Convert HTML/CSS to Figma canvas commands — structural fidelity, no LLM required",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "figma-html-import": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "figma",
+    "html",
+    "css",
+    "converter",
+    "design",
+    "import"
+  ],
+  "license": "MIT",
+  "author": "So Eun Ahn",
+  "dependencies": {
+    "css-tree": "^3.1.0",
+    "express": "^5.2.1",
+    "htmlparser2": "^9.1.0",
+    "open": "^11.0.0",
+    "puppeteer": "^24.37.5",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/css-tree": "^2.3.0",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.11.0",
+    "@types/ws": "^8.5.10",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
