@@ -118,6 +118,30 @@ export async function startInspectServer(options: InspectServerOptions): Promise
     }
   });
 
+  // ─── API: Persist overrides to memory (no file write, no reload) ───────────
+  app.post("/__inspect/persist", (req, res) => {
+    try {
+      const { selector, overrides } = req.body;
+      if (!selector || !overrides) {
+        res.status(400).json({ error: "Missing selector or overrides" });
+        return;
+      }
+      const cssOverrides: Record<string, string> = {};
+      for (const [k, v] of Object.entries(overrides)) {
+        if (!k.startsWith('_') && typeof v === 'string') cssOverrides[k] = v;
+      }
+      if (Object.keys(cssOverrides).length > 0) {
+        persistedOverrides.set(selector, {
+          ...(persistedOverrides.get(selector) || {}),
+          ...cssOverrides,
+        });
+      }
+      res.json({ ok: true });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // ─── API: Apply style overrides to .inspect-canvas.json ──────────────────
   app.post("/__inspect/apply", async (req, res) => {
     try {
@@ -265,6 +289,7 @@ export async function startInspectServer(options: InspectServerOptions): Promise
           for (const [sel, props] of persistedOverrides) {
             css += `${sel} {\n`;
             for (const [k, v] of Object.entries(props)) {
+              if (k.startsWith('_') || typeof v !== 'string') continue;
               const prop = k.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
               css += `  ${prop}: ${v} !important;\n`;
             }
@@ -399,23 +424,25 @@ function camelToDash(s: string): string {
 }
 
 /**
- * Directly patches CSS rules inside <style> blocks to apply overrides for the
- * given element selector. Falls back to an override block for unhandled properties.
+ * Patches CSS rules inside <style> blocks for the given selector.
+ * Returns { html, unhandled } — the caller is responsible for writing
+ * a combined override block for ALL selectors' unhandled properties.
  */
 function patchCssInHtml(
   html: string,
   selector: string,
   overrides: Record<string, string>
-): string {
+): { html: string; unhandled: Record<string, string> } {
   // Extract tag + classes from last combinator segment of selector
   const lastSeg = selector.split(/\s*[>+~]\s*/).pop()?.trim() ?? selector;
   const tagM = lastSeg.match(/^([a-zA-Z][a-zA-Z0-9]*)/);
   const elementTag = tagM?.[1].toLowerCase() ?? null;
   const elementClasses = [...lastSeg.matchAll(/\.([a-zA-Z][\w-]*)/g)].map(m => m[1]);
 
-  // Convert camelCase override keys to dash-case
+  // Convert camelCase override keys to dash-case, skipping internal/non-string values
   const dashOverrides: Record<string, string> = {};
   for (const [k, v] of Object.entries(overrides)) {
+    if (k.startsWith('_') || typeof v !== 'string') continue;
     dashOverrides[camelToDash(k)] = v;
   }
 
@@ -461,26 +488,13 @@ function patchCssInHtml(
     }
   );
 
-  // Remove old override block
-  result = result.replace(/<style\s+id="inspect-canvas-overrides">[\s\S]*?<\/style>\n?/g, '');
-
-  // Any properties that weren't found in existing rules go into an override block
+  // Collect properties not found in any existing CSS rule
   const unhandled: Record<string, string> = {};
   for (const [prop, val] of Object.entries(dashOverrides)) {
     if (!handled.has(prop)) unhandled[prop] = val;
   }
-  if (Object.keys(unhandled).length > 0) {
-    let css = `<style id="inspect-canvas-overrides">\n  ${selector} {\n`;
-    for (const [prop, val] of Object.entries(unhandled)) {
-      css += `    ${prop}: ${val} !important;\n`;
-    }
-    css += `  }\n</style>`;
-    result = result.includes('</head>')
-      ? result.replace('</head>', `${css}\n</head>`)
-      : result + '\n' + css;
-  }
 
-  return result;
+  return { html: result, unhandled };
 }
 
 function writeOverridesToSourceHtml(dir: string, overrides: Map<string, Record<string, string>>): void {
@@ -489,9 +503,36 @@ function writeOverridesToSourceHtml(dir: string, overrides: Map<string, Record<s
   for (const file of htmlFiles) {
     try {
       let html = readFileSync(file, 'utf-8');
+
+      // Remove old combined override block once, before processing selectors
+      html = html.replace(/<style\s+id="inspect-canvas-overrides">[\s\S]*?<\/style>\n?/g, '');
+
+      // Patch each selector, collecting unhandled properties
+      const allUnhandled = new Map<string, Record<string, string>>();
       for (const [selector, props] of overrides) {
-        html = patchCssInHtml(html, selector, props);
+        const result = patchCssInHtml(html, selector, props);
+        html = result.html;
+        if (Object.keys(result.unhandled).length > 0) {
+          allUnhandled.set(selector, result.unhandled);
+        }
       }
+
+      // Write ONE combined override block for all selectors
+      if (allUnhandled.size > 0) {
+        let css = '<style id="inspect-canvas-overrides">\n';
+        for (const [sel, props] of allUnhandled) {
+          css += `  ${sel} {\n`;
+          for (const [prop, val] of Object.entries(props)) {
+            css += `    ${prop}: ${val} !important;\n`;
+          }
+          css += `  }\n`;
+        }
+        css += '</style>';
+        html = html.includes('</head>')
+          ? html.replace('</head>', `${css}\n</head>`)
+          : html + '\n' + css;
+      }
+
       writeFileSync(file, html);
       console.log(`  ✎ Patched source: ${file}`);
     } catch (err: any) {
@@ -1310,10 +1351,74 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     }
   }
 
+  // Collect current dirty overrides from the UI (same logic as Apply button)
+  function collectCurrentOverrides() {
+    var o = {};
+    if (dirtyProps.has('backgroundColor') && document.getElementById('secFill').style.display !== 'none') {
+      o.backgroundColor = bgSwatchInner.style.background || 'transparent';
+    }
+    if (dirtyProps.has('color') && document.getElementById('secTextColor').style.display !== 'none') {
+      o.color = textSwatchInner.style.background || '#000000';
+    }
+    if ((dirtyProps.has('borderColor') || dirtyProps.has('borderWidth')) && strokeControls.classList.contains('open')) {
+      o.borderColor = strokeSwatchInner.style.background || '#000000';
+      o.borderWidth = (strokeWidthNum.value || '0') + 'px';
+      o.borderStyle = 'solid';
+    }
+    if (dirtyProps.has('fontSize') && document.getElementById('secType').style.display !== 'none') {
+      o.fontSize = (fontSizeNum.value || '') + 'px';
+    }
+    if (dirtyProps.has('fontWeight') && document.getElementById('secType').style.display !== 'none') {
+      o.fontWeight = fontWeightSel.value;
+    }
+    if (dirtyProps.has('borderRadius') && document.getElementById('secBorder').style.display !== 'none') {
+      var tl = rTL.value, tr = rTR.value, bl = rBL.value, br = rBR.value;
+      if (tl === tr && tr === bl && bl === br) {
+        o.borderRadius = tl + 'px';
+      } else {
+        o.borderRadius = tl + 'px ' + tr + 'px ' + br + 'px ' + bl + 'px';
+      }
+    }
+    if (dirtyProps.has('position')) o.position = stickyToggle.classList.contains('on') ? 'sticky' : 'static';
+    if (dirtyProps.has('top')) o.top = stickyToggle.classList.contains('on') ? '0px' : 'auto';
+    if (dirtyProps.has('transform')) o.transform = 'translate(' + (translateXNum.value || '0') + 'px, ' + (translateYNum.value || '0') + 'px)';
+    if (dirtyProps.has('display')) o.display = currentDisplay;
+    if (dirtyProps.has('flexDirection')) { var fdb = document.querySelector('#directionBtns .align-btn[data-prop="flexDirection"].active'); if (fdb) o.flexDirection = fdb.dataset.val; }
+    if (dirtyProps.has('flexWrap')) o.flexWrap = document.querySelector('#directionBtns .align-btn[data-prop="flexWrap"]')?.classList.contains('active') ? 'wrap' : 'nowrap';
+    if (dirtyProps.has('justifyContent')) { var jab = window._lastAlignJustify; if (jab) o.justifyContent = jab; }
+    if (dirtyProps.has('alignItems') && window._lastAlignItems) { o.alignItems = window._lastAlignItems; }
+    if (dirtyProps.has('gap')) o.gap = (gapNum.value || '0') + 'px';
+    if (dirtyProps.has('padding')) {
+      var pt = pTop.value, pr = pRight.value, pb = pBottom.value, pl = pLeft.value;
+      if (pt === pr && pr === pb && pb === pl) {
+        o.padding = (pt || '0') + 'px';
+      } else {
+        o.padding = (pt||'0')+'px '+(pr||'0')+'px '+(pb||'0')+'px '+(pl||'0')+'px';
+      }
+    }
+    var hoverOverrides = {};
+    if (dirtyProps.has('hover:backgroundColor')) hoverOverrides.backgroundColor = bgHoverSwatchInner.style.background || 'transparent';
+    if (dirtyProps.has('hover:color')) hoverOverrides.color = textHoverSwatchInner.style.background || '#000000';
+    if (dirtyProps.has('hover:borderColor')) hoverOverrides.borderColor = strokeHoverSwatchInner.style.background || '#000000';
+    if (Object.keys(hoverOverrides).length > 0) o._hoverStyles = hoverOverrides;
+    return o;
+  }
+
   // Listen for element selection from iframe
   var lastSelectedSelector = null;
   window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'inspect-canvas-selected') {
+      // Auto-persist dirty changes for the PREVIOUS element before switching
+      if (dirtyProps.size > 0 && lastSelectedSelector) {
+        var pending = collectCurrentOverrides();
+        if (Object.keys(pending).length > 0) {
+          fetch('/__inspect/persist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ selector: lastSelectedSelector, overrides: pending })
+          }).catch(function(err) { console.warn('[inspect-canvas] auto-persist failed:', err); });
+        }
+      }
       lastSelectedSelector = e.data.selector || null;
       dirtyProps.clear();
       var d = e.data, s = d.styles || {};
@@ -1646,67 +1751,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   });
   applyBtn.addEventListener('click', function(e) {
     e.stopPropagation();
-    // Only send properties the user actually changed
-    var overrides = {};
-    if (dirtyProps.has('backgroundColor') && document.getElementById('secFill').style.display !== 'none') {
-      overrides.backgroundColor = bgSwatchInner.style.background || 'transparent';
-    }
-    if (dirtyProps.has('color') && document.getElementById('secTextColor').style.display !== 'none') {
-      overrides.color = textSwatchInner.style.background || '#000000';
-    }
-    if ((dirtyProps.has('borderColor') || dirtyProps.has('borderWidth')) && strokeControls.classList.contains('open')) {
-      overrides.borderColor = strokeSwatchInner.style.background || '#000000';
-      overrides.borderWidth = (strokeWidthNum.value || '0') + 'px';
-      overrides.borderStyle = 'solid';
-    }
-    if (dirtyProps.has('fontSize') && document.getElementById('secType').style.display !== 'none') {
-      overrides.fontSize = (fontSizeNum.value || '') + 'px';
-    }
-    if (dirtyProps.has('fontWeight') && document.getElementById('secType').style.display !== 'none') {
-      overrides.fontWeight = fontWeightSel.value;
-    }
-    if (dirtyProps.has('borderRadius') && document.getElementById('secBorder').style.display !== 'none') {
-      var tl = rTL.value, tr = rTR.value, bl = rBL.value, br = rBR.value;
-      if (tl === tr && tr === bl && bl === br) {
-        overrides.borderRadius = tl + 'px';
-      } else {
-        overrides.borderRadius = tl + 'px ' + tr + 'px ' + br + 'px ' + bl + 'px';
-      }
-    }
-    if (dirtyProps.has('position')) overrides.position = stickyToggle.classList.contains('on') ? 'sticky' : 'static';
-    if (dirtyProps.has('top')) overrides.top = stickyToggle.classList.contains('on') ? '0px' : 'auto';
-    if (dirtyProps.has('transform')) overrides.transform = 'translate(' + (translateXNum.value || '0') + 'px, ' + (translateYNum.value || '0') + 'px)';
-    if (dirtyProps.has('display')) overrides.display = currentDisplay;
-    if (dirtyProps.has('flexDirection')) { var fdb = document.querySelector('#directionBtns .align-btn[data-prop="flexDirection"].active'); if (fdb) overrides.flexDirection = fdb.dataset.val; }
-    if (dirtyProps.has('flexWrap')) overrides.flexWrap = document.querySelector('#directionBtns .align-btn[data-prop="flexWrap"]')?.classList.contains('active') ? 'wrap' : 'nowrap';
-    if (dirtyProps.has('justifyContent')) {
-      var jab = window._lastAlignJustify;
-      if (jab) overrides.justifyContent = jab;
-    }
-    if (dirtyProps.has('alignItems') && window._lastAlignItems) { overrides.alignItems = window._lastAlignItems; }
-    if (dirtyProps.has('gap')) overrides.gap = (gapNum.value || '0') + 'px';
-    if (dirtyProps.has('padding')) {
-      var pt = pTop.value, pr = pRight.value, pb = pBottom.value, pl = pLeft.value;
-      if (pt === pr && pr === pb && pb === pl) {
-        overrides.padding = (pt || '0') + 'px';
-      } else {
-        overrides.padding = (pt||'0')+'px '+(pr||'0')+'px '+(pb||'0')+'px '+(pl||'0')+'px';
-      }
-    }
-    // Collect hover overrides
-    var hoverOverrides = {};
-    if (dirtyProps.has('hover:backgroundColor')) {
-      hoverOverrides.backgroundColor = bgHoverSwatchInner.style.background || 'transparent';
-    }
-    if (dirtyProps.has('hover:color')) {
-      hoverOverrides.color = textHoverSwatchInner.style.background || '#000000';
-    }
-    if (dirtyProps.has('hover:borderColor')) {
-      hoverOverrides.borderColor = strokeHoverSwatchInner.style.background || '#000000';
-    }
-    if (Object.keys(hoverOverrides).length > 0) {
-      overrides._hoverStyles = hoverOverrides;
-    }
+    var overrides = collectCurrentOverrides();
     if (Object.keys(overrides).length === 0) {
       applyBtn.textContent = 'Nothing changed';
       setTimeout(function() { applyBtn.textContent = 'Apply Changes'; }, 1200);
