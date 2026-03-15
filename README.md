@@ -133,7 +133,8 @@ See [FEATURES.md](FEATURES.md) for the full phase plan.
 
 - ✅ Phase 1 — Plain HTML + CSS (complete)
 - ✅ Phase 2 — React + Tailwind CSS (complete)
-- 🔜 Phase 3 — Next.js + Tailwind
+- ✅ Phase 3 — Next.js + Tailwind (complete)
+- 🔜 Phase 4 — React + CSS Modules
 - Phase 3 — Next.js + Tailwind
 - Phase 4 — React + CSS Modules
 - Phase 5 — Vue + Tailwind

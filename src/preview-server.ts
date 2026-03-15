@@ -13,16 +13,18 @@ import { resolve, extname } from "node:path";
 import type { InspectData, InspectServerOptions } from "./types.js";
 import { patchJsxSource } from "./phase2/ast-source-patcher.js";
 import { cssToTailwind, getConflictingClasses } from "./phase2/tailwind-mapper.js";
+import { detectNextProject } from "./phase3/next-detector.js";
+import { patchNextJsSource } from "./phase3/next-patcher.js";
 
 function camelToKebab(s: string): string {
   return s.replace(/[A-Z]/g, c => '-' + c.toLowerCase());
 }
 
-function tryApplyToJsx(
+async function tryApplyToJsx(
   sourceRef: string,
   overrides: Record<string, string>,
   projectRoot: string
-): void {
+): Promise<void> {
   const match = sourceRef.match(/^(.+\.(tsx|jsx)):(\d+)$/);
   if (!match) return;
 
@@ -47,6 +49,22 @@ function tryApplyToJsx(
     }
   }
 
+  // ── Phase 3: route Next.js projects through the Next.js-aware patcher ──
+  const nextInfo = detectNextProject(projectRoot);
+  if (nextInfo.isNextJs) {
+    const result = await patchNextJsSource({
+      filePath, line, addClasses, removeClasses, setStyles, projectRoot,
+    });
+    if (!result.ok) {
+      console.warn(`  ⚠ Next.js patch skipped (${result.reason}): ${result.message}`);
+      return;
+    }
+    const hmrNote = result.hmrNotified ? " (HMR notified)" : "";
+    console.log(`  ✎ Patched Next.js JSX: ${relativePath}:${line}${hmrNote}`);
+    return;
+  }
+
+  // ── Phase 2: plain React / non-Next.js ──────────────────────────────────
   const patched = patchJsxSource({ filePath, line, addClasses, removeClasses, setStyles });
   writeFileSync(filePath, patched);
   console.log(`  ✎ Patched JSX: ${relativePath}:${line}`);
@@ -97,7 +115,7 @@ export async function startInspectServer(options: InspectServerOptions): Promise
   });
 
   // ─── API: Apply style overrides to .inspect-canvas.json ──────────────────
-  app.post("/__inspect/apply", (req, res) => {
+  app.post("/__inspect/apply", async (req, res) => {
     try {
       const { overrides } = req.body;
       if (!overrides) {
@@ -127,10 +145,10 @@ export async function startInspectServer(options: InspectServerOptions): Promise
       // Write overrides to source HTML files (Phase 1: plain HTML/CSS)
       writeOverridesToSourceHtml(outputDir, persistedOverrides);
 
-      // Phase 2: patch JSX source directly if data-source points to a .tsx/.jsx file
+      // Phase 2/3: patch JSX source directly if data-source points to a .tsx/.jsx file
       if (data.source) {
         try {
-          tryApplyToJsx(data.source, overrides, outputDir);
+          await tryApplyToJsx(data.source, overrides, outputDir);
         } catch (err: any) {
           console.warn(`  ⚠ JSX patch skipped: ${err.message}`);
         }

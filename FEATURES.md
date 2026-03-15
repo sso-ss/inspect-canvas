@@ -25,16 +25,18 @@
 
 ---
 
-## Phase 3 — Next.js + Tailwind 🔜 Next
-**Nearly identical to Phase 2 with two additions.**
+## Phase 3 — Next.js + Tailwind ✅ Complete
+**Nearly identical to Phase 2 with Next.js-specific safeguards.**
 
-- [ ] App Router: skip patching `"use server"` files, handle RSC boundaries
-- [ ] HMR awareness: trigger hot reload correctly after source patch
-- [ ] Pages Router: covered by Phase 2 Babel plugin
+- [x] App Router: detect RSC files (no "use client" directive) — skip patching with a clear warning
+- [x] App Router: block patching of "use server" files (server actions)
+- [x] HMR awareness: touch file mtime + ping Next.js dev server after patch to trigger hot reload
+- [x] Pages Router: covered by Phase 2 patcher (files outside app/ have no RSC restriction)
+- [x] Wired into `tryApplyToJsx` — auto-detects Next.js via `package.json` and routes accordingly
 
 ---
 
-## Phase 4 — React + CSS Modules
+## Phase 4 — React + CSS Modules 🔜 Next
 - [ ] CSS module import tracer: detect `className={styles.hero}` → resolve the `.module.css` file
 - [ ] CSS module patcher: update the correct rule in the resolved file (reuses existing CSS patch logic)
 
