@@ -1,9 +1,0 @@
-# Next.js generated
-.next/
-out/
-
-# Dependencies
-node_modules/
-
-# env
-.env*.local
