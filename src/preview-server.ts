@@ -11,6 +11,46 @@ import express from "express";
 import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { resolve, extname } from "node:path";
 import type { InspectData, InspectServerOptions } from "./types.js";
+import { patchJsxSource } from "./phase2/ast-source-patcher.js";
+import { cssToTailwind, getConflictingClasses } from "./phase2/tailwind-mapper.js";
+
+function camelToKebab(s: string): string {
+  return s.replace(/[A-Z]/g, c => '-' + c.toLowerCase());
+}
+
+function tryApplyToJsx(
+  sourceRef: string,
+  overrides: Record<string, string>,
+  projectRoot: string
+): void {
+  const match = sourceRef.match(/^(.+\.(tsx|jsx)):(\d+)$/);
+  if (!match) return;
+
+  const [, relativePath, , lineStr] = match;
+  const filePath = resolve(projectRoot, relativePath);
+  const line = parseInt(lineStr, 10);
+
+  try { statSync(filePath); } catch { return; }
+
+  const addClasses: string[] = [];
+  const removeClasses: string[] = [];
+  const setStyles: Record<string, string> = {};
+
+  for (const [camelProp, value] of Object.entries(overrides)) {
+    const cssProp = camelToKebab(camelProp);
+    const twClass = cssToTailwind(cssProp, value);
+    if (twClass) {
+      addClasses.push(twClass);
+      removeClasses.push(...getConflictingClasses(cssProp));
+    } else {
+      setStyles[camelProp] = value;
+    }
+  }
+
+  const patched = patchJsxSource({ filePath, line, addClasses, removeClasses, setStyles });
+  writeFileSync(filePath, patched);
+  console.log(`  ✎ Patched JSX: ${relativePath}:${line}`);
+}
 
 export async function startInspectServer(options: InspectServerOptions): Promise<void> {
   const {
@@ -84,8 +124,18 @@ export async function startInspectServer(options: InspectServerOptions): Promise
           ...overrides,
         });
       }
-      // Write overrides to source HTML files
+      // Write overrides to source HTML files (Phase 1: plain HTML/CSS)
       writeOverridesToSourceHtml(outputDir, persistedOverrides);
+
+      // Phase 2: patch JSX source directly if data-source points to a .tsx/.jsx file
+      if (data.source) {
+        try {
+          tryApplyToJsx(data.source, overrides, outputDir);
+        } catch (err: any) {
+          console.warn(`  ⚠ JSX patch skipped: ${err.message}`);
+        }
+      }
+
       console.log(`  ✎ Applied overrides to <${data.tag}>`);
       res.json({ ok: true });
     } catch (err: any) {

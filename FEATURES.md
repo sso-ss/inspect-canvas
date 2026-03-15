@@ -11,20 +11,21 @@
 
 ---
 
-## Phase 2 — React + Tailwind CSS 🔜 Next
+## Phase 2 — React + Tailwind CSS ✅ Complete
 **Covers output from Claude, ChatGPT, v0, Lovable, Bolt — ~80% of target users.**
 
-- [ ] Vite plugin: inject `data-source="src/Hero.tsx:14"` into every JSX element at dev time
-- [ ] Babel plugin: same injection for webpack / CRA / Next.js Pages Router
-- [ ] AST source patcher: read `data-source` → parse file with `@babel/parser` → find JSX node → modify `className` or `style` prop → write back
-- [ ] Tailwind class mapper: CSS values → Tailwind classes (e.g. `18px` → `text-lg`, `#3B82F6` → `text-blue-500`)
-- [ ] Inline style fallback: when no Tailwind class matches, inject `style={{ ... }}`
+- [x] Vite plugin: inject `data-source="src/Hero.tsx:14"` into every JSX element at dev time
+- [x] Babel plugin: same injection for webpack / CRA / Next.js Pages Router
+- [x] AST source patcher: read `data-source` → parse file with `@babel/parser` → find JSX node → modify `className` or `style` prop → write back
+- [x] Tailwind class mapper: CSS values → Tailwind classes (e.g. `18px` → `text-lg`, `#3B82F6` → `text-blue-500`)
+- [x] Inline style fallback: when no Tailwind class matches, inject `style={{ ... }}`
+- [x] Wired into `/__inspect/apply` endpoint — applies changes to `.tsx`/`.jsx` source files on Apply
 
-**Deliverable:** Designer edits a React + Tailwind component visually → correct Tailwind class is written back to the `.tsx` source file.
+**Deliverable:** Designer edits a React + Tailwind component visually → correct Tailwind class is written back to the `.tsx` source file. ✓
 
 ---
 
-## Phase 3 — Next.js + Tailwind
+## Phase 3 — Next.js + Tailwind 🔜 Next
 **Nearly identical to Phase 2 with two additions.**
 
 - [ ] App Router: skip patching `"use server"` files, handle RSC boundaries

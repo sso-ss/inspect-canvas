@@ -196,3 +196,38 @@ export function cssToTailwind(property: string, value: string): string | null {
 
   return null;
 }
+
+/**
+ * Returns all known Tailwind classes that conflict with the given CSS property —
+ * pass these as removeClasses to patchJsxSource so old values are cleared first.
+ */
+export function getConflictingClasses(cssProperty: string): string[] {
+  switch (cssProperty) {
+    case 'font-size':        return Object.values(FONT_SIZE);
+    case 'font-weight':      return Object.values(FONT_WEIGHT);
+    case 'border-radius':    return Object.values(BORDER_RADIUS);
+    case 'display':          return Object.values(DISPLAY);
+    case 'align-items':      return Object.values(ALIGN_ITEMS);
+    case 'justify-content':  return Object.values(JUSTIFY_CONTENT);
+    case 'flex-direction':   return Object.values(FLEX_DIRECTION);
+    case 'opacity':          return Object.values(OPACITY);
+    case 'width':            return Object.values(WIDTH_MAP);
+    case 'height':           return Object.values(HEIGHT_MAP);
+    case 'min-height':       return Object.values(MIN_HEIGHT_MAP);
+    case 'padding':          return Object.values(SPACING).map(u => `p-${u}`);
+    case 'padding-top':      return Object.values(SPACING).map(u => `pt-${u}`);
+    case 'padding-bottom':   return Object.values(SPACING).map(u => `pb-${u}`);
+    case 'padding-left':     return Object.values(SPACING).map(u => `pl-${u}`);
+    case 'padding-right':    return Object.values(SPACING).map(u => `pr-${u}`);
+    case 'margin':           return Object.values(SPACING).map(u => `m-${u}`);
+    case 'margin-top':       return Object.values(SPACING).map(u => `mt-${u}`);
+    case 'margin-bottom':    return Object.values(SPACING).map(u => `mb-${u}`);
+    case 'margin-left':      return Object.values(SPACING).map(u => `ml-${u}`);
+    case 'margin-right':     return Object.values(SPACING).map(u => `mr-${u}`);
+    case 'gap':              return Object.values(SPACING).map(u => `gap-${u}`);
+    case 'color':            return [...Object.values(COLOR_MAP).map(n => `text-${n}`), 'text-black', 'text-white'];
+    case 'background-color': return [...Object.values(COLOR_MAP).map(n => `bg-${n}`), 'bg-black', 'bg-white'];
+    case 'border-color':     return [...Object.values(COLOR_MAP).map(n => `border-${n}`), 'border-black', 'border-white'];
+    default:                 return [];
+  }
+}
