@@ -7,6 +7,23 @@ diag.mjs
 # macOS
 .DS_Store
 
+# Environment / secrets
+.env
+.env.*
+*.pem
+*.key
+*.cert
+
+# IDE
+.vscode/
+.idea/
+
+# Test coverage
+coverage/
+
+# Next.js
+.next/
+
 # Generated inspector output
 .ui-inspect.json
 .inspect-canvas.json
