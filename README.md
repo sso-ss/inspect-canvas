@@ -53,6 +53,22 @@ npm install -g inspect-canvas
 npx inspect-canvas
 ```
 
+### One-click setup (no terminal needed)
+
+If you're not comfortable with the terminal, use the included setup scripts. They install Node.js (if needed), install inspect-canvas globally, and configure AI integration — all in one step.
+
+| Platform | File | How to run |
+|----------|------|------------|
+| **Mac** | `Install Inspect Canvas.command` | Double-click in Finder |
+| **Windows** | `setup.bat` | Double-click in File Explorer |
+
+Both scripts will:
+1. Check for Node.js (and offer to install it if missing)
+2. Install inspect-canvas globally via npm
+3. Set up `.github/copilot-instructions.md` for AI integration
+
+> **Tip:** On Mac, if you get a "can't be opened" warning, right-click the file → Open.
+
 ---
 
 ## Usage

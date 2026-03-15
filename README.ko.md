@@ -53,6 +53,22 @@ npm install -g inspect-canvas
 npx inspect-canvas
 ```
 
+### 원클릭 설치 (터미널 필요 없음)
+
+터미널이 익숙하지 않다면 포함된 설치 스크립트를 사용하세요. Node.js 설치(필요시), inspect-canvas 글로벌 설치, AI 연동 설정을 한 번에 처리합니다.
+
+| 플랫폼 | 파일 | 실행 방법 |
+|--------|------|----------|
+| **Mac** | `Install Inspect Canvas.command` | Finder에서 더블클릭 |
+| **Windows** | `setup.bat` | 파일 탐색기에서 더블클릭 |
+
+두 스크립트 모두 다음을 수행합니다:
+1. Node.js 확인 (없으면 설치 안내)
+2. npm으로 inspect-canvas 글로벌 설치
+3. AI 연동을 위한 `.github/copilot-instructions.md` 설정
+
+> **팁:** Mac에서 "열 수 없습니다" 경고가 뜨면 파일을 우클릭 → 열기를 선택하세요.
+
 ---
 
 ## 사용법
