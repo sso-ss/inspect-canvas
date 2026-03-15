@@ -3,3 +3,12 @@ dist/
 *.tsbuildinfo
 debug-radius.mjs
 diag.mjs
+
+# macOS
+.DS_Store
+
+# Generated inspector output
+.ui-inspect.json
+.inspect-canvas.json
+*/.ui-inspect.json
+*/.inspect-canvas.json
