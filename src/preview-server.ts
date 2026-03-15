@@ -26,13 +26,17 @@ async function tryApplyToJsx(
   projectRoot: string
 ): Promise<void> {
   const match = sourceRef.match(/^(.+\.(tsx|jsx)):(\d+)$/);
-  if (!match) return;
+  if (!match) {
+    console.warn(`  ⚠ data-source format unrecognised: ${sourceRef}`);
+    return;
+  }
 
   const [, relativePath, , lineStr] = match;
-  const filePath = resolve(projectRoot, relativePath);
+  // If the path is already absolute, resolve() returns it as-is
+  const filePath = relativePath.startsWith('/') ? relativePath : resolve(projectRoot, relativePath);
   const line = parseInt(lineStr, 10);
 
-  try { statSync(filePath); } catch { return; }
+  try { statSync(filePath); } catch { console.warn(`  ⚠ Source file not found: ${filePath}`); return; }
 
   const addClasses: string[] = [];
   const removeClasses: string[] = [];
@@ -147,11 +151,20 @@ export async function startInspectServer(options: InspectServerOptions): Promise
 
       // Phase 2/3: patch JSX source directly if data-source points to a .tsx/.jsx file
       if (data.source) {
-        try {
-          await tryApplyToJsx(data.source, overrides, outputDir);
-        } catch (err: any) {
-          console.warn(`  ⚠ JSX patch skipped: ${err.message}`);
+        // Strip internal keys that aren't CSS properties (e.g. _hoverStyles)
+        const jsxOverrides: Record<string, string> = {};
+        for (const [k, v] of Object.entries(overrides)) {
+          if (!k.startsWith('_') && typeof v === 'string') jsxOverrides[k] = v;
         }
+        console.log(`  → Patching source: ${data.source}`);
+        console.log(`  → Overrides: ${JSON.stringify(jsxOverrides)}`);
+        try {
+          await tryApplyToJsx(data.source, jsxOverrides, outputDir);
+        } catch (err: any) {
+          console.warn(`  ⚠ JSX patch error: ${err.message}`);
+        }
+      } else {
+        console.warn(`  ⚠ No data-source on selected element — JSX patch skipped`);
       }
 
       console.log(`  ✎ Applied overrides to <${data.tag}>`);
@@ -164,7 +177,15 @@ export async function startInspectServer(options: InspectServerOptions): Promise
   // ─── Local folder mode: serve files directly from disk ───────────────
   if (localDir) {
     app.use("/__proxy", (req, res) => {
-      const defaultFile = localFile ?? "index.html";
+      let defaultFile = localFile ?? "index.html";
+      // If default file doesn't exist, pick the first .html file in the directory
+      if (!localFile) {
+        const defaultPath = resolve(localDir, defaultFile);
+        try { statSync(defaultPath); } catch {
+          const htmlFiles = readdirSync(localDir).filter(f => f.endsWith(".html"));
+          if (htmlFiles.length > 0) defaultFile = htmlFiles[0];
+        }
+      }
       const urlPath = req.path === "/" ? "/" + defaultFile : req.path;
       const filePath = resolve(localDir, "." + urlPath);
       try {
@@ -194,12 +215,19 @@ export async function startInspectServer(options: InspectServerOptions): Promise
   app.use("/__proxy", async (req, res) => {
     try {
       const target = new URL(url!);
-      // Strip the /__proxy prefix to get the real path
-      const targetUrl = new URL(req.originalUrl.replace(/^\/__proxy/, ''), target);
+      // Strip the /__proxy prefix; default to "/" if nothing remains
+      const rawPath = req.originalUrl.replace(/^\/__proxy/, '') || '/';
+      let targetUrl: URL;
+      try {
+        targetUrl = new URL(rawPath, target.origin);
+      } catch {
+        res.status(400).type("text/plain").send(`Proxy error: could not resolve path "${rawPath}"`);
+        return;
+      }
 
       const headers: Record<string, string> = {};
       for (const [key, value] of Object.entries(req.headers)) {
-        if (key === "host" || key === "connection") continue;
+        if (key === "host" || key === "connection" || key === "upgrade") continue;
         if (typeof value === "string") headers[key] = value;
       }
       headers["host"] = target.host;
@@ -261,6 +289,12 @@ export async function startInspectServer(options: InspectServerOptions): Promise
         res.setHeader("Cache-Control", "no-store");
         res.type("html").send(html);
       } else {
+        // Non-HTML response (JS, CSS, images, etc.)
+        // For error status codes with no content-type, force text/plain so
+        // the browser renders them instead of triggering a file download.
+        if (response.status >= 400 && !contentType) {
+          res.type("text/plain");
+        }
         const buffer = Buffer.from(await response.arrayBuffer());
         res.send(buffer);
       }
@@ -275,7 +309,8 @@ export async function startInspectServer(options: InspectServerOptions): Promise
           </body></html>
         `);
       } else {
-        res.status(502).send(`Proxy error: ${err.message}`);
+        console.error(`  ✗ Proxy error [${req.method} ${req.originalUrl}]: ${err.message}`);
+        res.status(502).type("text/plain").send(`Proxy error: ${err.message}`);
       }
     }
   });
@@ -508,6 +543,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     overflow: hidden; user-select: none; transition: background 0.2s ease;
+    max-height: calc(100vh - 20px); display: flex; flex-direction: column;
   }
   #uiPanel.dragging { transition: none; }
   #uiToggle {
@@ -560,7 +596,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   #uiStatus:hover { background: #161b22; }
   #propsPanel {
     display: none; padding: 0 12px 10px; border-top: 1px solid #21262d;
-    max-height: calc(100vh - 114px); overflow-y: auto; user-select: auto;
+    overflow-y: auto; user-select: auto; min-height: 0; flex: 1;
   }
   #propsPanel.open { display: block; }
   #propsPanel::-webkit-scrollbar { width: 4px; }
@@ -682,7 +718,8 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   }
   #applyBtn:hover { background: #2ea043; }
   #applyBtn:active { background: #196c2e; }
-  .btn-row { display: flex; gap: 6px; margin-top: 10px; }
+  .btn-row { display: none; gap: 6px; padding: 8px 12px; border-top: 1px solid #21262d; flex-shrink: 0; }
+  .btn-row.open { display: flex; }
   .radius-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
   .radius-toggle {
     width: 20px; height: 20px; background: none; border: 1px solid #30363d;
@@ -789,31 +826,6 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     <div class="prop-section" id="secPosition">
       <div class="prop-section-title">Position</div>
       <div class="prop-row">
-        <span class="prop-label">Type</span>
-        <select class="prop-select" id="positionSel">
-          <option value="static">static</option>
-          <option value="relative">relative</option>
-          <option value="absolute">absolute</option>
-          <option value="fixed">fixed</option>
-          <option value="sticky">sticky</option>
-        </select>
-      </div>
-      <div id="positionOffsets" style="display:none">
-        <div class="radius-corners open">
-          <div class="corner-row"><div class="corner-icon tl" style="border-radius:0;border-right:none;border-bottom:none;"></div><input type="number" class="corner-num" id="posTop" placeholder="T"></div>
-          <div class="corner-row"><div class="corner-icon tr" style="border-radius:0;border-left:none;border-bottom:none;"></div><input type="number" class="corner-num" id="posRight" placeholder="R"></div>
-          <div class="corner-row"><div class="corner-icon bl" style="border-radius:0;border-right:none;border-top:none;"></div><input type="number" class="corner-num" id="posBottom" placeholder="B"></div>
-          <div class="corner-row"><div class="corner-icon br" style="border-radius:0;border-left:none;border-top:none;"></div><input type="number" class="corner-num" id="posLeft" placeholder="L"></div>
-        </div>
-        <div class="prop-row">
-          <span class="prop-label">Z-Index</span>
-          <input type="number" class="prop-num" id="zIndexNum" min="-999" max="9999">
-        </div>
-      </div>
-    </div>
-    <div class="prop-section" id="secLayout">
-      <div class="prop-section-title">Layout</div>
-      <div class="prop-row">
         <span class="prop-label">Display</span>
         <select class="prop-select" id="displaySel">
           <option value="block">Stack</option>
@@ -860,6 +872,20 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
           <input type="number" class="prop-num" id="gapNum" min="0" max="999">
           <span class="unit-label">px</span>
         </div>
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">Sticky</span>
+        <div class="toggle-switch" id="stickyToggle"></div>
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">X</span>
+        <input type="number" class="prop-num" id="translateX" placeholder="0">
+        <span class="unit-label">px</span>
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">Y</span>
+        <input type="number" class="prop-num" id="translateY" placeholder="0">
+        <span class="unit-label">px</span>
       </div>
     </div>
     <div class="prop-section" id="secSpacing">
@@ -975,10 +1001,10 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
         <span class="prop-value" id="displayValue"></span>
       </div>
     </div>
-    <div class="btn-row">
-      <button id="applyBtn">Apply Changes</button>
-      <button id="resetBtn">Reset</button>
-    </div>
+  </div>
+  <div class="btn-row" id="btnRow">
+    <button id="applyBtn">Apply Changes</button>
+    <button id="resetBtn">Reset</button>
   </div>
 </div>
 
@@ -1065,13 +1091,9 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   const pBottom = document.getElementById('pBottom');
   const pLeft = document.getElementById('pLeft');
   let perSidePaddingMode = false;
-  const positionSel = document.getElementById('positionSel');
-  const positionOffsets = document.getElementById('positionOffsets');
-  const posTop = document.getElementById('posTop');
-  const posRight = document.getElementById('posRight');
-  const posBottom = document.getElementById('posBottom');
-  const posLeft = document.getElementById('posLeft');
-  const zIndexNum = document.getElementById('zIndexNum');
+  const stickyToggle = document.getElementById('stickyToggle');
+  const translateXNum = document.getElementById('translateX');
+  const translateYNum = document.getElementById('translateY');
   const displaySel = document.getElementById('displaySel');
   const layoutFlexControls = document.getElementById('layoutFlexControls');
   const gapNum = document.getElementById('gapNum');
@@ -1289,13 +1311,16 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   }
 
   // Listen for element selection from iframe
+  var lastSelectedSelector = null;
   window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'inspect-canvas-selected') {
+      lastSelectedSelector = e.data.selector || null;
       dirtyProps.clear();
       var d = e.data, s = d.styles || {};
       elTag.textContent = '\u003C' + d.tag + '\u003E' + (d.text ? ' ' + d.text.slice(0, 30) : '');
       statusEl.style.display = 'block';
       propsPanel.classList.add('open');
+      document.getElementById('btnRow').classList.add('open');
 
       // Progressive disclosure: decide which sections to show
       var tag = d.tag.toLowerCase();
@@ -1334,8 +1359,6 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
       document.getElementById('secType').style.display = isTextEl ? '' : 'none';
       // Border radius: show if has radius, is interactive, or is image
       document.getElementById('secBorder').style.display = (hasRadius || isInteractive || isImage) ? '' : 'none';
-      // Layout: always show
-      document.getElementById('secLayout').style.display = '';
       // Position: always show
       document.getElementById('secPosition').style.display = '';
       // Spacing: always show
@@ -1400,18 +1423,15 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
       } else {
         radiusCorners.classList.remove('open'); radiusExpandBtn.classList.remove('active');
       }
-      // Position
+      // Sticky toggle
       var posType = s.position || 'static';
-      positionSel.value = posType;
-      var isPositioned = posType !== 'static';
-      positionOffsets.style.display = isPositioned ? '' : 'none';
-      if (isPositioned) {
-        posTop.value = s.top && s.top !== 'auto' ? Math.round(parsePx(s.top)) : '';
-        posRight.value = s.right && s.right !== 'auto' ? Math.round(parsePx(s.right)) : '';
-        posBottom.value = s.bottom && s.bottom !== 'auto' ? Math.round(parsePx(s.bottom)) : '';
-        posLeft.value = s.left && s.left !== 'auto' ? Math.round(parsePx(s.left)) : '';
-        zIndexNum.value = s.zIndex && s.zIndex !== 'auto' ? s.zIndex : '';
-      }
+      if (posType === 'sticky') { stickyToggle.classList.add('on'); } else { stickyToggle.classList.remove('on'); }
+      // Translate X/Y
+      var tf = s.transform || 'none';
+      var txMatch = tf.match(/translate(?:X|3d)?\\(([^,)]+)/); 
+      var tyMatch = tf.match(/translateY\\(([^)]+)/) || tf.match(/translate(?:3d)?\\([^,]+,\\s*([^,)]+)/);
+      translateXNum.value = txMatch ? Math.round(parseFloat(txMatch[1])) || '' : '';
+      translateYNum.value = tyMatch ? Math.round(parseFloat(tyMatch[1])) || '' : '';
       // Layout
       currentDisplay = s.display || 'block';
       var displayVal = currentDisplay;
@@ -1543,21 +1563,20 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   pRight.addEventListener('change', sendSidePaddings);
   pBottom.addEventListener('change', sendSidePaddings);
   pLeft.addEventListener('change', sendSidePaddings);
-  positionSel.addEventListener('change', function() {
-    var v = this.value;
+  stickyToggle.addEventListener('click', function() {
+    var isOn = this.classList.toggle('on');
     dirtyProps.add('position');
-    sendOverride('position', v);
-    positionOffsets.style.display = v !== 'static' ? '' : 'none';
+    sendOverride('position', isOn ? 'sticky' : 'static');
+    if (isOn) { sendOverride('top', '0px'); dirtyProps.add('top'); }
   });
-  function sendPosOffset(prop, input) {
-    dirtyProps.add(prop);
-    sendOverride(prop, input.value !== '' ? input.value + 'px' : 'auto');
+  function sendTranslate() {
+    dirtyProps.add('transform');
+    var x = translateXNum.value || '0';
+    var y = translateYNum.value || '0';
+    sendOverride('transform', 'translate(' + x + 'px, ' + y + 'px)');
   }
-  posTop.addEventListener('change', function() { sendPosOffset('top', this); });
-  posRight.addEventListener('change', function() { sendPosOffset('right', this); });
-  posBottom.addEventListener('change', function() { sendPosOffset('bottom', this); });
-  posLeft.addEventListener('change', function() { sendPosOffset('left', this); });
-  zIndexNum.addEventListener('change', function() { dirtyProps.add('zIndex'); sendOverride('zIndex', this.value); });
+  translateXNum.addEventListener('change', sendTranslate);
+  translateYNum.addEventListener('change', sendTranslate);
   displaySel.addEventListener('change', function() {
     currentDisplay = this.value;
     dirtyProps.add('display');
@@ -1618,11 +1637,12 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
       });
     });
   });
-  statusEl.addEventListener('click', function() { propsPanel.classList.toggle('open'); });
+  statusEl.addEventListener('click', function() { propsPanel.classList.toggle('open'); document.getElementById('btnRow').classList.toggle('open'); });
   resetBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     try { iframe.contentWindow.postMessage({ type: 'inspect-canvas-reset' }, '*'); } catch(e) {}
     propsPanel.classList.remove('open');
+    document.getElementById('btnRow').classList.remove('open');
   });
   applyBtn.addEventListener('click', function(e) {
     e.stopPropagation();
@@ -1653,12 +1673,9 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
         overrides.borderRadius = tl + 'px ' + tr + 'px ' + br + 'px ' + bl + 'px';
       }
     }
-    if (dirtyProps.has('position')) overrides.position = positionSel.value;
-    if (dirtyProps.has('top')) overrides.top = posTop.value !== '' ? posTop.value + 'px' : 'auto';
-    if (dirtyProps.has('right')) overrides.right = posRight.value !== '' ? posRight.value + 'px' : 'auto';
-    if (dirtyProps.has('bottom')) overrides.bottom = posBottom.value !== '' ? posBottom.value + 'px' : 'auto';
-    if (dirtyProps.has('left')) overrides.left = posLeft.value !== '' ? posLeft.value + 'px' : 'auto';
-    if (dirtyProps.has('zIndex')) overrides.zIndex = zIndexNum.value;
+    if (dirtyProps.has('position')) overrides.position = stickyToggle.classList.contains('on') ? 'sticky' : 'static';
+    if (dirtyProps.has('top')) overrides.top = stickyToggle.classList.contains('on') ? '0px' : 'auto';
+    if (dirtyProps.has('transform')) overrides.transform = 'translate(' + (translateXNum.value || '0') + 'px, ' + (translateYNum.value || '0') + 'px)';
     if (dirtyProps.has('display')) overrides.display = currentDisplay;
     if (dirtyProps.has('flexDirection')) { var fdb = document.querySelector('#directionBtns .align-btn[data-prop="flexDirection"].active'); if (fdb) overrides.flexDirection = fdb.dataset.val; }
     if (dirtyProps.has('flexWrap')) overrides.flexWrap = document.querySelector('#directionBtns .align-btn[data-prop="flexWrap"]')?.classList.contains('active') ? 'wrap' : 'nowrap';
@@ -1704,7 +1721,22 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
       if (d.ok) {
         applyBtn.textContent = '\u2713 Applied';
         applyBtn.style.background = '#196c2e';
-        setTimeout(function() { applyBtn.textContent = 'Apply Changes'; applyBtn.style.background = ''; }, 1500);
+        // Reload iframe to reflect source changes, then re-select the same element
+        var selectorToRestore = lastSelectedSelector;
+        iframe.addEventListener('load', function onReload() {
+          iframe.removeEventListener('load', onReload);
+          setTimeout(function() {
+            // Re-enable inspect mode in the iframe
+            iframe.contentWindow.postMessage({ type: 'inspect-canvas-toggle', enabled: true }, '*');
+            // Re-select the same element
+            if (selectorToRestore) {
+              iframe.contentWindow.postMessage({ type: 'inspect-canvas-reselect', selector: selectorToRestore }, '*');
+            }
+            applyBtn.textContent = 'Apply Changes';
+            applyBtn.style.background = '';
+          }, 600);
+        });
+        iframe.contentWindow.location.reload();
       }
     }).catch(function(err) { console.error('[inspect-canvas] apply failed:', err); });
   });
@@ -1775,6 +1807,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
       applyViewport(0, 0);
       presetSel.value = '0x0';
       propsPanel.classList.remove('open');
+      document.getElementById('btnRow').classList.remove('open');
       statusEl.style.display = 'none';
     }
   });
@@ -1879,7 +1912,8 @@ function getInspectorScript(serverPort: number): string {
         }
       }
       if (e.data && e.data.type === 'inspect-canvas-override' && selectedEl) {
-        selectedEl.style[e.data.property] = e.data.value;
+        var cssProp = e.data.property.replace(/[A-Z]/g, function(m){return '-'+m.toLowerCase();});
+        selectedEl.style.setProperty(cssProp, e.data.value, 'important');
       }
       if (e.data && e.data.type === 'inspect-canvas-hover-override' && selectedEl) {
         if (!window._icHoverOverrides) window._icHoverOverrides = {};
@@ -1898,6 +1932,13 @@ function getInspectorScript(serverPort: number): string {
         var hst = document.getElementById('inspect-canvas-hover-style'); if (hst) hst.textContent = '';
         if (selectedEl.getAttribute('data-ic-sel')) selectedEl.removeAttribute('data-ic-sel');
         window._icHoverOverrides = null;
+      }
+      if (e.data && e.data.type === 'inspect-canvas-reselect' && e.data.selector) {
+        var target = document.querySelector(e.data.selector);
+        if (target) {
+          inspectEnabled = true;
+          onClick({ target: target, preventDefault: function(){}, stopPropagation: function(){}, stopImmediatePropagation: function(){} });
+        }
       }
     });
 
@@ -2058,7 +2099,7 @@ function getInspectorScript(serverPort: number): string {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     }).then(() => {
-      try { window.parent.postMessage({ type: 'inspect-canvas-selected', tag: data.tag, text: data.text || '', styles: data.styles, hoverStyles: data.hoverStyles, size: data.size }, '*'); } catch(e) {}
+      try { window.parent.postMessage({ type: 'inspect-canvas-selected', tag: data.tag, text: data.text || '', styles: data.styles, hoverStyles: data.hoverStyles, size: data.size, selector: data.selector }, '*'); } catch(e) {}
     }).catch(err => console.error('[inspect-canvas] save failed:', err));
   }
 

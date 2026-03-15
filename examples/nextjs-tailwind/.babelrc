@@ -3,7 +3,7 @@
   "env": {
     "development": {
       "plugins": [
-        ["../../dist/babel-plugin.js"]
+        ["../../dist/babel-plugin.cjs"]
       ]
     }
   }

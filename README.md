@@ -1,5 +1,7 @@
 # inspect-canvas
 
+🇺🇸 English | [🇰🇷 한국어](README.ko.md)
+
 > A Figma-like browser inspector for designers and non-engineers.  
 > Click any element → edit it visually → save changes back to your source code.
 
@@ -36,7 +38,9 @@ The goal is to let designers own that final 10% of polish themselves, without ne
 - **Click to select** — Click any element in the preview to inspect and edit it
 - **Viewport presets** — Responsive preview with device presets (iPhone, iPad, desktop, full HD)
 - **Two modes** — Proxy a running dev server (`http://localhost:5173`) or serve a local folder directly
-- **Writes back to source** — Changes are patched directly into your HTML/CSS source files
+- **Writes back to source** — Changes are patched directly into your source files (HTML/CSS, React + Tailwind, Next.js)
+- **React + Tailwind** — Edits write the correct Tailwind class back to your `.tsx` source (e.g. `text-lg`, `text-blue-500`)
+- **Next.js support** — Works with both App Router and Pages Router, with automatic hot reload after changes
 - **AI-ready** — Writes `.inspect-canvas.json` so AI assistants (GitHub Copilot, Claude) know exactly what element you selected and what you want changed
 
 ---
@@ -96,7 +100,7 @@ await startInspectServer({
 1. **Open** — inspect-canvas wraps your site in a shell with a floating inspector panel
 2. **Click** — Click any element; the panel fills with its current properties
 3. **Edit** — Adjust values directly in the panel (color picker, number inputs, dropdowns)
-4. **Apply** — Hit Apply; changes are written back to your source HTML/CSS files
+4. **Apply** — Hit Apply; changes are written back to your source files (HTML/CSS, React/Tailwind, Next.js)
 5. **AI assist** — A `.inspect-canvas.json` file is written to your project root with the selected element's full details, so you can tell your AI "update this element" and it knows exactly what to change
 
 ---
@@ -124,21 +128,6 @@ Every click updates this file:
 ```
 
 AI tools (and GitHub Copilot via `.github/copilot-instructions.md`) read this file when you say *"update this element"* — they know the selector, current styles, source file, and your instruction.
-
----
-
-## Roadmap
-
-See [FEATURES.md](FEATURES.md) for the full phase plan.
-
-- ✅ Phase 1 — Plain HTML + CSS (complete)
-- ✅ Phase 2 — React + Tailwind CSS (complete)
-- ✅ Phase 3 — Next.js + Tailwind (complete)
-- 🔜 Phase 4 — React + CSS Modules
-- Phase 3 — Next.js + Tailwind
-- Phase 4 — React + CSS Modules
-- Phase 5 — Vue + Tailwind
-- Phase 6 — VS Code extension, Svelte, Figma token import
 
 ---
 

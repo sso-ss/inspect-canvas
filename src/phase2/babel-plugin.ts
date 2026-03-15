@@ -43,6 +43,47 @@ function dataSourcePlugin(filename: string): () => PluginObj {
 }
 
 /**
+ * Default export — used when referenced from .babelrc:
+ *   "plugins": [["../../dist/babel-plugin.cjs"]]
+ *
+ * Babel calls this function with ({ types }) and the plugin return value
+ * is { visitor: { JSXOpeningElement } }.
+ */
+export default function inspectCanvasPlugin({ types: t }: any): PluginObj {
+  return {
+    visitor: {
+      JSXOpeningElement(path: any, state: any) {
+        const filename: string = state.filename || state.file?.opts?.filename || "";
+        const node = path.node;
+
+        if (!node.name) return;
+        if (t.isJSXIdentifier(node.name) && node.name.name === "Fragment") return;
+        if (
+          t.isJSXMemberExpression(node.name) &&
+          t.isJSXIdentifier(node.name.property, { name: "Fragment" })
+        ) return;
+
+        const line: number | undefined = node.loc?.start.line;
+        if (!line) return;
+
+        const hasDataSource = node.attributes.some(
+          (a: any) =>
+            t.isJSXAttribute(a) && t.isJSXIdentifier(a.name, { name: "data-source" })
+        );
+        if (hasDataSource) return;
+
+        node.attributes.push(
+          t.jsxAttribute(
+            t.jsxIdentifier("data-source"),
+            t.stringLiteral(`${filename}:${line}`)
+          )
+        );
+      },
+    },
+  };
+}
+
+/**
  * Babel transform that injects data-source attributes into JSX elements.
  * Wraps @babel/core transformSync with the data-source plugin.
  */
