@@ -1,4 +1,4 @@
-# ui-inspect — Feature Plan
+# inspect-canvas — Feature Plan
 
 ## Phase 1 — Foundation ✅ Complete
 **Plain HTML + CSS**
@@ -7,7 +7,7 @@
 - [x] Click-to-inspect overlay injected into pages
 - [x] Figma-style properties panel (color, typography, spacing, layout, radius, stroke)
 - [x] Writes changes back to source HTML/CSS files
-- [x] `.ui-inspect.json` output for AI assistants (Copilot, Claude)
+- [x] `.inspect-canvas.json` output for AI assistants (Copilot, Claude)
 
 ---
 

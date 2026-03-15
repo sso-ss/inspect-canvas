@@ -1,4 +1,4 @@
-# ui-inspect
+# inspect-canvas
 
 > A Figma-like browser inspector for designers and non-engineers.  
 > Click any element → edit it visually → save changes back to your source code.
@@ -22,7 +22,7 @@ Fixing these small things creates a painful loop:
 
 Designers who are fluent in Figma get completely lost in DevTools. The panels look nothing alike. The terminology is different. It's a tool that assumes you already know how to code.
 
-**ui-inspect bridges that gap.**
+**inspect-canvas bridges that gap.**
 
 It wraps your generated app in an inspector that looks and feels like Figma's right-hand panel. Click any element — and instead of raw computed CSS, you see familiar controls: colour swatches, font size, spacing, border radius, layout direction. Make a change, hit Apply, and it writes directly back to your source files. No DevTools. No code editing. No back-and-forth with an AI.
 
@@ -37,16 +37,16 @@ The goal is to let designers own that final 10% of polish themselves, without ne
 - **Viewport presets** — Responsive preview with device presets (iPhone, iPad, desktop, full HD)
 - **Two modes** — Proxy a running dev server (`http://localhost:5173`) or serve a local folder directly
 - **Writes back to source** — Changes are patched directly into your HTML/CSS source files
-- **AI-ready** — Writes `.ui-inspect.json` so AI assistants (GitHub Copilot, Claude) know exactly what element you selected and what you want changed
+- **AI-ready** — Writes `.inspect-canvas.json` so AI assistants (GitHub Copilot, Claude) know exactly what element you selected and what you want changed
 
 ---
 
 ## Installation
 
 ```bash
-npm install -g ui-inspect
+npm install -g inspect-canvas
 # or without installing:
-npx ui-inspect
+npx inspect-canvas
 ```
 
 ---
@@ -56,22 +56,22 @@ npx ui-inspect
 ### Inspect a running dev server
 
 ```bash
-ui-inspect http://localhost:5173
+inspect-canvas http://localhost:5173
 ```
 
 ### Serve a local folder
 
 ```bash
-ui-inspect ./my-project
+inspect-canvas ./my-project
 ```
 
 ### Options
 
 ```
-ui-inspect <url-or-folder> [options]
+inspect-canvas <url-or-folder> [options]
 
   -p, --port <port>     Inspector server port (default: 3100)
-  -o, --output <dir>    Directory to write .ui-inspect.json (default: cwd)
+  -o, --output <dir>    Directory to write .inspect-canvas.json (default: cwd)
   --no-open             Don't open browser automatically
   -h, --help            Show help
 ```
@@ -79,7 +79,7 @@ ui-inspect <url-or-folder> [options]
 ### As a Node.js API
 
 ```ts
-import { startInspectServer } from 'ui-inspect';
+import { startInspectServer } from 'inspect-canvas';
 
 await startInspectServer({
   url: 'http://localhost:5173', // or localDir: './my-project'
@@ -93,15 +93,15 @@ await startInspectServer({
 
 ## How it works
 
-1. **Open** — ui-inspect wraps your site in a shell with a floating inspector panel
+1. **Open** — inspect-canvas wraps your site in a shell with a floating inspector panel
 2. **Click** — Click any element; the panel fills with its current properties
 3. **Edit** — Adjust values directly in the panel (color picker, number inputs, dropdowns)
 4. **Apply** — Hit Apply; changes are written back to your source HTML/CSS files
-5. **AI assist** — A `.ui-inspect.json` file is written to your project root with the selected element's full details, so you can tell your AI "update this element" and it knows exactly what to change
+5. **AI assist** — A `.inspect-canvas.json` file is written to your project root with the selected element's full details, so you can tell your AI "update this element" and it knows exactly what to change
 
 ---
 
-## `.ui-inspect.json`
+## `.inspect-canvas.json`
 
 Every click updates this file:
 
@@ -123,7 +123,7 @@ Every click updates this file:
 }
 ```
 
-AI tools read this file when you say *"update this element"* — they know the selector, current styles, source file, and your instruction.
+AI tools (and GitHub Copilot via `.github/copilot-instructions.md`) read this file when you say *"update this element"* — they know the selector, current styles, source file, and your instruction.
 
 ---
 
