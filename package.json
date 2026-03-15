@@ -1,12 +1,12 @@
 {
-  "name": "figma-html-import",
+  "name": "inspect-canvas",
   "version": "0.1.0",
-  "description": "Convert HTML/CSS to Figma canvas commands — structural fidelity, no LLM required",
+  "description": "Click any element in the browser, then tell your AI to update it",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "figma-html-import": "dist/cli.js"
+    "inspect-canvas": "dist/cli.js"
   },
   "exports": {
     ".": {
@@ -23,31 +23,31 @@
     "lint": "tsc --noEmit"
   },
   "keywords": [
-    "figma",
-    "html",
-    "css",
-    "converter",
+    "ui",
+    "inspect",
+    "preview",
+    "ai",
     "design",
-    "import"
+    "developer-tools"
   ],
   "license": "MIT",
   "author": "So Eun Ahn",
   "dependencies": {
-    "css-tree": "^3.1.0",
     "express": "^5.2.1",
-    "htmlparser2": "^9.1.0",
-    "open": "^11.0.0",
-    "puppeteer": "^24.37.5",
-    "ws": "^8.16.0"
+    "open": "^11.0.0"
   },
   "devDependencies": {
-    "@types/css-tree": "^2.3.0",
+    "@babel/core": "^7.29.0",
+    "@babel/generator": "^7.29.1",
+    "@babel/parser": "^7.29.0",
+    "@babel/plugin-syntax-jsx": "^7.28.6",
+    "@babel/preset-typescript": "^7.28.5",
+    "@babel/traverse": "^7.29.0",
     "@types/express": "^5.0.6",
     "@types/node": "^20.11.0",
-    "@types/ws": "^8.5.10",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
-    "vitest": "^4.0.0"
+    "vitest": "^4.1.0"
   },
   "engines": {
     "node": ">=18.0.0"

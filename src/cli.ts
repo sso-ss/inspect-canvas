@@ -1,107 +1,72 @@
 /**
- * figma-html-import — CLI
+ * inspect-canvas — CLI
  *
  * Usage:
- *   npx figma-html-import ./component.html
- *   echo '<div>Hello</div>' | npx figma-html-import
- *   npx figma-html-import ./page.html --dry-run
- *   npx figma-html-import ./page.html --port 18211 --parent-id "1:2"
- *   npx figma-html-import --url https://example.com
- *   npx figma-html-import --url https://example.com --selector ".hero"
+ *   npx inspect-canvas http://localhost:5173
+ *   npx inspect-canvas ./my-project
+ *   npx inspect-canvas http://localhost:3000 --port 4000
  */
 
-import { readFileSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
-import { htmlToFigma, htmlToCommands } from "./index.js";
-import { fetchUrlAsHtml } from "./url-fetcher.js";
-import { startPreviewServer } from "./preview-server.js";
+import { startInspectServer } from "./preview-server.js";
+
+function printHelp(): void {
+  console.log(`
+inspect-canvas — Click any element, then tell your AI to update it.
+
+USAGE:
+  inspect-canvas <url-or-folder> [options]
+
+OPTIONS:
+  -h, --help              Show this help message
+  -p, --port <port>       Inspect server port (default: 3100)
+  -o, --output <dir>      Directory to write .inspect-canvas.json (default: cwd)
+  --no-open               Don't auto-open browser
+
+EXAMPLES:
+  inspect-canvas ./my-project
+  inspect-canvas http://localhost:5173
+  inspect-canvas http://localhost:3000 --port 4000
+`);
+}
 
 interface CliArgs {
-  file?: string;
   url?: string;
   port: number;
-  parentId?: string;
-  dryRun: boolean;
-  scale: number;
-  baseFont: string;
-  baseFontSize: number;
-  styles?: string;
-  selector?: string;
-  viewportWidth: number;
-  viewportHeight: number;
-  preview: boolean;
+  outputDir?: string;
+  openBrowser: boolean;
   help: boolean;
-  version: boolean;
 }
 
 function parseArgs(argv: string[]): CliArgs {
   const args: CliArgs = {
-    port: 18211,
-    dryRun: false,
-    scale: 1,
-    baseFont: "Inter",
-    baseFontSize: 16,
-    viewportWidth: 1440,
-    viewportHeight: 900,
-    preview: false,
+    port: 3100,
+    openBrowser: true,
     help: false,
-    version: false,
   };
 
   for (let i = 2; i < argv.length; i++) {
     const arg = argv[i];
-
     switch (arg) {
       case "--help":
       case "-h":
         args.help = true;
         break;
-      case "--version":
-      case "-v":
-        args.version = true;
-        break;
-      case "--dry-run":
-      case "-n":
-        args.dryRun = true;
-        break;
       case "--port":
       case "-p":
         args.port = parseInt(argv[++i], 10);
         break;
-      case "--parent-id":
-        args.parentId = argv[++i];
+      case "--output":
+      case "-o":
+        args.outputDir = argv[++i];
         break;
-      case "--scale":
-        args.scale = parseFloat(argv[++i]);
-        break;
-      case "--base-font":
-        args.baseFont = argv[++i];
-        break;
-      case "--base-font-size":
-        args.baseFontSize = parseInt(argv[++i], 10);
-        break;
-      case "--styles":
-        args.styles = argv[++i];
-        break;
-      case "--selector":
-        args.selector = argv[++i];
-        break;
-      case "--url":
-      case "-u":
-        args.url = argv[++i];
-        break;
-      case "--viewport-width":
-        args.viewportWidth = parseInt(argv[++i], 10);
-        break;
-      case "--viewport-height":
-        args.viewportHeight = parseInt(argv[++i], 10);
-        break;
-      case "--preview":
-        args.preview = true;
+      case "--no-open":
+        args.openBrowser = false;
         break;
       default:
         if (!arg.startsWith("-")) {
-          args.file = arg;
+          args.url = arg;
         } else {
           console.error(`Unknown option: ${arg}`);
           process.exit(1);
@@ -112,58 +77,6 @@ function parseArgs(argv: string[]): CliArgs {
   return args;
 }
 
-function printHelp(): void {
-  console.log(`
-figma-html-import — Convert HTML/CSS to Figma canvas elements
-
-USAGE:
-  figma-html-import <file.html> [options]
-  figma-html-import --url <url> [options]
-  echo '<div>Hello</div>' | figma-html-import [options]
-
-OPTIONS:
-  -h, --help              Show this help message
-  -v, --version           Show version
-  -n, --dry-run           Print generated commands without sending to Figma
-  -u, --url <url>         Fetch a live webpage and convert to Figma
-  --preview               Open a browser preview with "Send to Figma" button
-  -p, --port <port>       MCP relay server WebSocket port (default: 18211)
-  --parent-id <id>        Figma parent node ID to insert into
-  --scale <n>             Scale factor (default: 1)
-  --base-font <name>      Default font family (default: Inter)
-  --base-font-size <px>   Root font size for rem (default: 16)
-  --styles <css>          Additional CSS to apply
-  --selector <sel>        CSS selector to extract (default: body)
-  --viewport-width <px>   Browser viewport width (default: 1440)
-  --viewport-height <px>  Browser viewport height (default: 900)
-
-EXAMPLES:
-  figma-html-import ./card.html
-  figma-html-import ./page.html --dry-run
-  figma-html-import --url https://example.com
-  figma-html-import --url https://example.com --selector ".main-content" --dry-run
-  figma-html-import --url https://example.com --preview
-  echo '<button style="padding:8px 16px">Click</button>' | figma-html-import --dry-run
-`);
-}
-
-async function readStdin(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let data = "";
-    process.stdin.setEncoding("utf8");
-
-    // If stdin is a TTY (no pipe), return empty
-    if (process.stdin.isTTY) {
-      resolve("");
-      return;
-    }
-
-    process.stdin.on("data", (chunk) => (data += chunk));
-    process.stdin.on("end", () => resolve(data));
-    process.stdin.on("error", reject);
-  });
-}
-
 async function main(): Promise<void> {
   const args = parseArgs(process.argv);
 
@@ -172,97 +85,58 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  if (args.version) {
-    try {
-      const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
-      console.log(pkg.version);
-    } catch {
-      console.log("0.1.0");
-    }
-    process.exit(0);
-  }
-
-  // Preview mode: open browser with "Send to Figma" button
-  if (args.preview) {
-    const previewUrl = args.url || (args.file ? `file://${resolve(args.file)}` : '');
-    if (!previewUrl) {
-      console.error("--preview requires --url or a file path.");
-      console.error("Example: figma-html-import --url https://example.com --preview");
-      process.exit(1);
-    }
-    await startPreviewServer({
-      url: previewUrl,
-      port: 3100,
-      wsPort: args.port,
-      selector: args.selector,
-    });
-    return; // server keeps running
-  }
-
-  // Read HTML input
-  let html = "";
-
-  if (args.url) {
-    // Fetch from URL using headless browser
-    try {
-      html = await fetchUrlAsHtml(args.url, {
-        selector: args.selector,
-        viewportWidth: args.viewportWidth,
-        viewportHeight: args.viewportHeight,
-      });
-    } catch (err: any) {
-      console.error(`Error fetching URL: ${args.url}`);
-      console.error(err.message);
-      process.exit(1);
-    }
-  } else if (args.file) {
-    const filePath = resolve(args.file);
-    try {
-      html = readFileSync(filePath, "utf8");
-    } catch (err: any) {
-      console.error(`Error reading file: ${filePath}`);
-      console.error(err.message);
-      process.exit(1);
-    }
-  } else {
-    html = await readStdin();
-  }
-
-  if (!html.trim()) {
-    console.error("No HTML input. Provide a file path or pipe HTML to stdin.");
-    console.error("Run with --help for usage.");
+  if (!args.url) {
+    console.error("Error: provide a URL or folder path to inspect.\n");
+    printHelp();
     process.exit(1);
   }
 
-  const options = {
-    wsPort: args.port,
-    parentId: args.parentId,
-    baseFont: args.baseFont,
-    baseFontSize: args.baseFontSize,
-    scale: args.scale,
-    styles: args.styles,
-    selector: args.selector,
-  };
+  // Detect if the argument is a local path (file or folder)
+  let target = args.url;
 
-  if (args.dryRun) {
-    // Print commands as JSON
-    const commands = htmlToCommands(html, options);
-    console.log(JSON.stringify(commands, null, 2));
-    console.error(`\n${commands.length} command(s) generated.`);
-  } else {
-    // Send to Figma
-    console.error("Connecting to Figma plugin bridge...");
-    const result = await htmlToFigma(html, options);
+  // Strip file:// protocol and decode %20 etc.
+  if (target.startsWith("file://")) {
+    target = decodeURIComponent(target.replace(/^file:\/\//, ""));
+  }
 
-    if (result.success) {
-      console.error(`✓ Sent ${result.commandCount} commands to Figma`);
-      if (result.succeeded !== undefined) {
-        console.error(`  ${result.succeeded} succeeded, ${result.failed} failed`);
-      }
-    } else {
-      console.error(`✗ Failed: ${result.error}`);
+  const isLocal = !target.startsWith("http://") && !target.startsWith("https://");
+  if (isLocal) {
+    const absPath = resolve(target);
+    if (!existsSync(absPath)) {
+      console.error(`Error: "${target}" does not exist.`);
       process.exit(1);
     }
+
+    const stat = statSync(absPath);
+    if (stat.isFile()) {
+      // Single HTML file — serve its parent directory, open that file
+      const dir = absPath.substring(0, absPath.lastIndexOf("/")) || ".";
+      const filename = absPath.substring(absPath.lastIndexOf("/") + 1);
+      await startInspectServer({
+        localDir: dir,
+        localFile: filename,
+        port: args.port,
+        outputDir: args.outputDir ?? dir,
+        openBrowser: args.openBrowser,
+      });
+    } else if (stat.isDirectory()) {
+      await startInspectServer({
+        localDir: absPath,
+        port: args.port,
+        outputDir: args.outputDir ?? absPath,
+        openBrowser: args.openBrowser,
+      });
+    } else {
+      console.error(`Error: "${target}" is not a file or directory.`);
+      process.exit(1);
+    }
+  } else {
+    await startInspectServer({
+      url: args.url,
+      port: args.port,
+      outputDir: args.outputDir,
+      openBrowser: args.openBrowser,
+    });
   }
 }
 
