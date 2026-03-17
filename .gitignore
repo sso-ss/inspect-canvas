@@ -4,6 +4,9 @@ dist/
 debug-radius.mjs
 diag.mjs
 
+# Lock files (library — consumers generate their own)
+package-lock.json
+
 # macOS
 .DS_Store
 
@@ -23,6 +26,12 @@ coverage/
 
 # Next.js
 .next/
+next-env.d.ts
+
+# Tests & examples (not needed in published package)
+test/
+test-landing/
+examples/
 
 # Generated inspector output
 .ui-inspect.json
