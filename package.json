@@ -32,6 +32,18 @@
   ],
   "license": "MIT",
   "author": "So Eun Ahn",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sso-ss/inspect-canvas.git"
+  },
+  "files": [
+    "dist",
+    "!dist/*.map",
+    "setup.sh",
+    "setup.bat",
+    "setup.ps1",
+    "Install Inspect Canvas.command"
+  ],
   "dependencies": {
     "express": "^5.2.1",
     "open": "^11.0.0"

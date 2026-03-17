@@ -1,5 +1,8 @@
 # inspect-canvas
 
+[![npm version](https://img.shields.io/npm/v/inspect-canvas)](https://www.npmjs.com/package/inspect-canvas)
+[![license](https://img.shields.io/npm/l/inspect-canvas)](https://www.npmjs.com/package/inspect-canvas)
+
 🇺🇸 English | [🇰🇷 한국어](README.ko.md)
 
 > A Figma-like browser inspector for designers and non-engineers.  

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synth — AI Design Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { 50:'#eef2ff', 100:'#e0e7ff', 200:'#c7d2fe', 400:'#818cf8', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca', 900:'#312e81' },
+          surface: { 50:'#fafafa', 100:'#f4f4f5', 200:'#e4e4e7', 800:'#27272a', 900:'#18181b' }
+        }
+      }
+    }
+  }
+</script>
+<style>
+  /* ── Custom CSS alongside Tailwind ── */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; }
+
+  /* Custom gradient that Tailwind can't easily express */
+  .hero-gradient {
+    background: linear-gradient(135deg, #312e81 0%, #4f46e5 40%, #818cf8 100%);
+  }
+
+  /* Custom animated glow ring */
+  .glow-ring {
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.3), 0 0 40px rgba(99,102,241,0.15);
+  }
+
+  /* Card hover lift — CSS transition */
+  .card-lift {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .card-lift:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  }
+
+  /* Testimonial slider track (custom CSS) */
+  .testimonial-track {
+    display: flex;
+    gap: 24px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .testimonial-track::-webkit-scrollbar { display: none; }
+  .testimonial-card {
+    scroll-snap-align: start;
+    min-width: 340px;
+  }
+
+  /* Pricing table custom border */
+  .pricing-popular {
+    border: 2px solid #6366f1;
+    position: relative;
+  }
+  .pricing-popular::before {
+    content: 'Most Popular';
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #6366f1;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 16px;
+    border-radius: 20px;
+  }
+
+  /* Gradient text helper (used with Tailwind) */
+  .text-gradient {
+    background: linear-gradient(135deg, #6366f1, #a78bfa, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Footer wave SVG background (pure CSS) */
+  .footer-wave {
+    background-color: #18181b;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100'%3E%3Cpath fill='%2318181b' d='M0,64L48,58.7C96,53,192,43,288,48C384,53,480,75,576,80C672,85,768,75,864,64C960,53,1056,43,1152,42.7C1248,43,1344,53,1392,58.7L1440,64L1440,100L0,100Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: top;
+    background-size: 100% 60px;
+  }
+</style>
+<style id="inspect-canvas-overrides">
+  section.hero-gradient.text-white.py-28.px-6.text-center.relative.overflow-hidden:nth-child(2) > div.relative.z-10.max-w-3xl.mx-auto:nth-child(3) > div.flex.flex-col.sm\:flex-row.gap-4.justify-center > a.border-2.border-white\/40.text-white.font-semibold.px-8.py-3\.5.rounded-xl.hover\:bg-white\/10.transition-colors.text-base:nth-child(2) {
+    border-radius: 12px !important;
+  }
+  section.hero-gradient.text-white.py-28.px-6.text-center.relative.overflow-hidden:nth-child(2) > div.relative.z-10.max-w-3xl.mx-auto:nth-child(3) > div.flex.flex-col.sm\:flex-row.gap-4.justify-center > a.bg-white.text-brand-700.font-bold.px-8.py-3\.5.rounded-xl.hover\:bg-brand-50.transition-colors.text-base:nth-child(1) {
+    border-radius: 12px !important;
+  }
+</style>
+</head>
+<body class="bg-white text-surface-900 antialiased">
+
+<!-- ─── Navigation (Tailwind) ─── -->
+<nav class="flex items-center justify-between px-8 lg:px-16 py-4 border-b border-surface-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+  <a href="#" class="text-xl font-extrabold text-brand-600 tracking-tight">Synth</a>
+
+  <ul class="hidden md:flex items-center gap-8">
+    <li><a href="#features" class="text-sm font-medium text-surface-800 hover:text-brand-600 transition-colors">Features</a></li>
+    <li><a href="#pricing" class="text-sm font-medium text-surface-800 hover:text-brand-600 transition-colors">Pricing</a></li>
+    <li><a href="#testimonials" class="text-sm font-medium text-surface-800 hover:text-brand-600 transition-colors">Testimonials</a></li>
+    <li><a href="#faq" class="text-sm font-medium text-surface-800 hover:text-brand-600 transition-colors">FAQ</a></li>
+  </ul>
+
+  <div class="flex items-center gap-3">
+    <a href="#" class="text-sm font-semibold text-surface-800 hover:text-brand-600 transition-colors">Log in</a>
+    <a href="#" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">Get Started</a>
+  </div>
+</nav>
+
+<!-- ─── Hero (mixed: custom CSS gradient + Tailwind layout) ─── -->
+<section class="hero-gradient text-white py-28 px-6 text-center relative overflow-hidden">
+  <!-- decorative blobs — pure CSS positioned with Tailwind -->
+  <div class="absolute top-10 left-10 w-72 h-72 bg-purple-400/20 rounded-full blur-3xl"></div>
+  <div class="absolute bottom-10 right-10 w-96 h-96 bg-indigo-300/20 rounded-full blur-3xl"></div>
+
+  <div class="relative z-10 max-w-3xl mx-auto">
+    <span class="inline-block bg-white/15 text-white text-xs font-semibold px-4 py-1.5 rounded-full mb-6 backdrop-blur-sm">✨ AI-Powered Design — Now in Beta</span>
+    <h1 class="text-5xl md:text-6xl font-extrabold leading-tight mb-6">
+      Design smarter.<br>Ship faster.
+    </h1>
+    <p class="text-lg text-indigo-100 max-w-xl mx-auto mb-10 leading-relaxed">
+      Synth uses AI to turn your ideas into production-ready interfaces. Describe what you want, iterate in real-time, and export clean code.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="#" class="bg-white text-brand-700 font-bold px-8 py-3.5 rounded-xl hover:bg-brand-50 transition-colors text-base">Start Free Trial</a>
+      <a href="#" class="border-2 border-white/40 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/10 transition-colors text-base">Watch Demo →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Logo Bar (Tailwind) ─── -->
+<section class="py-12 px-8 border-b border-surface-100">
+  <p class="text-center text-xs font-semibold text-surface-800/40 uppercase tracking-widest mb-6">Trusted by teams at</p>
+  <div class="flex flex-wrap items-center justify-center gap-10 text-surface-800/30 font-bold text-lg">
+    <span>Stripe</span>
+    <span>Vercel</span>
+    <span>Linear</span>
+    <span>Notion</span>
+    <span>Figma</span>
+    <span>Supabase</span>
+  </div>
+</section>
+
+<!-- ─── Features (mixed: Tailwind grid + custom CSS card-lift) ─── -->
+<section id="features" class="py-24 px-8 lg:px-16 max-w-6xl mx-auto">
+  <div class="text-center mb-16">
+    <span class="text-sm font-semibold text-brand-600 uppercase tracking-wider">Features</span>
+    <h2 class="text-4xl font-extrabold mt-2 mb-4">Everything you need to design &amp; ship</h2>
+    <p class="text-surface-800/60 max-w-lg mx-auto">From wireframe to production — Synth covers the full design-to-code pipeline.</p>
+  </div>
+
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- card: Tailwind + custom CSS hover -->
+    <div class="card-lift bg-surface-50 rounded-2xl p-7">
+      <div class="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center text-2xl mb-4">🎨</div>
+      <h3 class="text-lg font-bold mb-2">AI Canvas</h3>
+      <p class="text-sm text-surface-800/60 leading-relaxed">Describe your layout in plain English. Synth generates responsive, pixel-perfect designs instantly.</p>
+    </div>
+    <div class="card-lift bg-surface-50 rounded-2xl p-7">
+      <div class="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center text-2xl mb-4">⚡</div>
+      <h3 class="text-lg font-bold mb-2">Real-time Preview</h3>
+      <p class="text-sm text-surface-800/60 leading-relaxed">See changes live as you tweak. No waiting for builds — everything updates in milliseconds.</p>
+    </div>
+    <div class="card-lift bg-surface-50 rounded-2xl p-7">
+      <div class="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center text-2xl mb-4">🧩</div>
+      <h3 class="text-lg font-bold mb-2">Component Library</h3>
+      <p class="text-sm text-surface-800/60 leading-relaxed">500+ pre-built components that follow your design system. Fully customizable and accessible.</p>
+    </div>
+    <div class="card-lift bg-surface-50 rounded-2xl p-7">
+      <div class="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center text-2xl mb-4">🔗</div>
+      <h3 class="text-lg font-bold mb-2">Code Export</h3>
+      <p class="text-sm text-surface-800/60 leading-relaxed">Export clean React, Vue, or HTML. Tailwind, CSS Modules, or Styled Components — your choice.</p>
+    </div>
+    <div class="card-lift bg-surface-50 rounded-2xl p-7">
+      <div class="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center text-2xl mb-4">👥</div>
+      <h3 class="text-lg font-bold mb-2">Multiplayer</h3>
+      <p class="text-sm text-surface-800/60 leading-relaxed">Collaborate with your team in real-time. Cursors, comments, and version history built-in.</p>
+    </div>
+    <div class="card-lift bg-surface-50 rounded-2xl p-7">
+      <div class="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center text-2xl mb-4">🔒</div>
+      <h3 class="text-lg font-bold mb-2">Enterprise Ready</h3>
+      <p class="text-sm text-surface-800/60 leading-relaxed">SSO, audit logs, role-based access, and SOC 2 compliance. Built for teams of any size.</p>
+    </div>
+    <div class="card-lift bg-surface-50 rounded-2xl p-7">
+      <div class="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center text-2xl mb-4">📊</div>
+      <h3 class="text-lg font-bold mb-2">Analytics Dashboard</h3>
+      <p class="text-sm text-surface-800/60 leading-relaxed">Track design usage, component adoption, and team activity with built-in analytics and insights.</p>
+    </div>
+    <div class="card-lift bg-surface-50 rounded-2xl p-7">
+      <div class="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center text-2xl mb-4">🌐</div>
+      <h3 class="text-lg font-bold mb-2">Global CDN</h3>
+      <p class="text-sm text-surface-800/60 leading-relaxed">Assets served from edge locations worldwide. Lightning-fast load times no matter where your users are.</p>
+    </div>
+    <div class="card-lift bg-surface-50 rounded-2xl p-7">
+      <div class="w-12 h-12 bg-brand-100 rounded-xl flex items-center justify-center text-2xl mb-4">🔌</div>
+      <h3 class="text-lg font-bold mb-2">Plugin Ecosystem</h3>
+      <p class="text-sm text-surface-800/60 leading-relaxed">Extend Synth with community plugins — integrations with Slack, Jira, GitHub, and hundreds more.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Showcase (custom CSS styles + Tailwind layout) ─── -->
+<section class="bg-surface-900 text-white py-24 px-8 lg:px-16">
+  <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+    <div>
+      <span class="text-sm font-semibold text-brand-400 uppercase tracking-wider">How it works</span>
+      <h2 class="text-4xl font-extrabold mt-2 mb-6">Describe → Design → Ship</h2>
+      <div class="space-y-6">
+        <div class="flex gap-4">
+          <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold shrink-0">1</div>
+          <div>
+            <h3 class="font-bold mb-1">Describe your vision</h3>
+            <p class="text-sm text-white/60 leading-relaxed">Type what you want — "a pricing page with 3 tiers and a toggle" — and watch it appear.</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold shrink-0">2</div>
+          <div>
+            <h3 class="font-bold mb-1">Refine visually</h3>
+            <p class="text-sm text-white/60 leading-relaxed">Drag, resize, recolor. Use the inspector to fine-tune every detail to perfection.</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold shrink-0">3</div>
+          <div>
+            <h3 class="font-bold mb-1">Export &amp; deploy</h3>
+            <p class="text-sm text-white/60 leading-relaxed">One click to get production-ready code. Push to GitHub, deploy to Vercel — done.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Mock browser window — custom CSS + Tailwind -->
+    <div class="glow-ring rounded-2xl overflow-hidden">
+      <div class="bg-surface-800 px-4 py-3 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-red-400"></span>
+        <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+        <span class="w-3 h-3 rounded-full bg-green-400"></span>
+        <span class="ml-4 text-xs text-white/40 font-mono">synth.app/canvas</span>
+      </div>
+      <div style="background: linear-gradient(145deg, #1e1b4b, #312e81); padding: 48px 32px; min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
+        <div style="width: 80%; height: 14px; background: rgba(255,255,255,0.1); border-radius: 8px;"></div>
+        <div style="width: 60%; height: 14px; background: rgba(255,255,255,0.07); border-radius: 8px;"></div>
+        <div style="display: flex; gap: 12px; margin-top: 12px;">
+          <div style="width: 100px; height: 36px; background: #6366f1; border-radius: 8px;"></div>
+          <div style="width: 100px; height: 36px; background: rgba(255,255,255,0.1); border-radius: 8px;"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; margin-top: 16px;">
+          <div style="height: 80px; background: rgba(255,255,255,0.06); border-radius: 12px;"></div>
+          <div style="height: 80px; background: rgba(255,255,255,0.06); border-radius: 12px;"></div>
+          <div style="height: 80px; background: rgba(255,255,255,0.06); border-radius: 12px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Stats (Tailwind) ─── -->
+<section class="py-20 px-8 bg-brand-50">
+  <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+    <div>
+      <div class="text-4xl font-extrabold text-brand-700">12K+</div>
+      <div class="text-sm text-surface-800/50 mt-1">Designers</div>
+    </div>
+    <div>
+      <div class="text-4xl font-extrabold text-brand-700">2M+</div>
+      <div class="text-sm text-surface-800/50 mt-1">Designs Created</div>
+    </div>
+    <div>
+      <div class="text-4xl font-extrabold text-brand-700">99.95%</div>
+      <div class="text-sm text-surface-800/50 mt-1">Uptime</div>
+    </div>
+    <div>
+      <div class="text-4xl font-extrabold text-brand-700">4.9★</div>
+      <div class="text-sm text-surface-800/50 mt-1">Rating</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Pricing (mixed: custom CSS border + Tailwind) ─── -->
+<section id="pricing" class="py-24 px-8 lg:px-16 max-w-5xl mx-auto">
+  <div class="text-center mb-16">
+    <span class="text-sm font-semibold text-brand-600 uppercase tracking-wider">Pricing</span>
+    <h2 class="text-4xl font-extrabold mt-2 mb-4">Simple, transparent pricing</h2>
+    <p class="text-surface-800/60">No hidden fees. Cancel anytime.</p>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-8">
+    <!-- Free -->
+    <div class="card-lift border border-surface-200 rounded-2xl p-8">
+      <h3 class="text-lg font-bold mb-1">Free</h3>
+      <p class="text-sm text-surface-800/50 mb-6">For individuals getting started</p>
+      <div class="mb-6">
+        <span class="text-4xl font-extrabold">$0</span>
+        <span class="text-surface-800/50 text-sm">/month</span>
+      </div>
+      <ul class="space-y-3 text-sm text-surface-800/70 mb-8">
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> 3 projects</li>
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Basic components</li>
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Community support</li>
+        <li class="flex items-center gap-2"><span class="text-surface-800/30">✗</span> AI generation</li>
+        <li class="flex items-center gap-2"><span class="text-surface-800/30">✗</span> Code export</li>
+      </ul>
+      <a href="#" class="block text-center border-2 border-surface-200 text-surface-800 font-semibold py-3 rounded-xl hover:border-brand-600 hover:text-brand-600 transition-colors">Get Started</a>
+    </div>
+
+    <!-- Pro (popular — custom CSS border) -->
+    <div class="card-lift pricing-popular rounded-2xl p-8 bg-white">
+      <h3 class="text-lg font-bold mb-1">Pro</h3>
+      <p class="text-sm text-surface-800/50 mb-6">For professionals &amp; small teams</p>
+      <div class="mb-6">
+        <span class="text-4xl font-extrabold text-gradient">$29</span>
+        <span class="text-surface-800/50 text-sm">/month</span>
+      </div>
+      <ul class="space-y-3 text-sm text-surface-800/70 mb-8">
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Unlimited projects</li>
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> All components</li>
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> AI generation</li>
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Code export</li>
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Priority support</li>
+      </ul>
+      <a href="#" class="block text-center bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 rounded-xl transition-colors">Start Free Trial</a>
+    </div>
+
+    <!-- Enterprise -->
+    <div class="card-lift border border-surface-200 rounded-2xl p-8">
+      <h3 class="text-lg font-bold mb-1">Enterprise</h3>
+      <p class="text-sm text-surface-800/50 mb-6">For large teams &amp; organizations</p>
+      <div class="mb-6">
+        <span class="text-4xl font-extrabold">Custom</span>
+      </div>
+      <ul class="space-y-3 text-sm text-surface-800/70 mb-8">
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Everything in Pro</li>
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> SSO &amp; SAML</li>
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Audit logs</li>
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Custom SLA</li>
+        <li class="flex items-center gap-2"><span class="text-green-500">✓</span> Dedicated support</li>
+      </ul>
+      <a href="#" class="block text-center border-2 border-surface-200 text-surface-800 font-semibold py-3 rounded-xl hover:border-brand-600 hover:text-brand-600 transition-colors">Contact Sales</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Testimonials (custom CSS slider + Tailwind cards) ─── -->
+<section id="testimonials" class="py-24 px-8 lg:px-16 bg-surface-50">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-12">
+      <span class="text-sm font-semibold text-brand-600 uppercase tracking-wider">Testimonials</span>
+      <h2 class="text-4xl font-extrabold mt-2">Loved by designers &amp; developers</h2>
+    </div>
+
+    <div class="testimonial-track pb-4">
+      <div class="testimonial-card bg-white rounded-2xl p-7 shadow-sm">
+        <p class="text-sm text-surface-800/70 leading-relaxed mb-5">"Synth completely changed our workflow. What used to take days now takes hours. The AI canvas is mind-blowing."</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-brand-200 flex items-center justify-center font-bold text-brand-700 text-sm">JD</div>
+          <div>
+            <div class="text-sm font-semibold">Jamie Diaz</div>
+            <div class="text-xs text-surface-800/40">Design Lead, Stripe</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card bg-white rounded-2xl p-7 shadow-sm">
+        <p class="text-sm text-surface-800/70 leading-relaxed mb-5">"The code export is incredibly clean. I copy it straight into our codebase — no cleanup needed. It just works."</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700 text-sm">AK</div>
+          <div>
+            <div class="text-sm font-semibold">Alex Kim</div>
+            <div class="text-xs text-surface-800/40">Frontend Engineer, Vercel</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card bg-white rounded-2xl p-7 shadow-sm">
+        <p class="text-sm text-surface-800/70 leading-relaxed mb-5">"We replaced three tools with Synth. Design, prototype, and handoff — all in one place. Incredible product."</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center font-bold text-orange-700 text-sm">SP</div>
+          <div>
+            <div class="text-sm font-semibold">Sarah Park</div>
+            <div class="text-xs text-surface-800/40">VP Design, Linear</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card bg-white rounded-2xl p-7 shadow-sm">
+        <p class="text-sm text-surface-800/70 leading-relaxed mb-5">"The multiplayer feature is a game-changer. Our team designs together in real-time now. No more version conflicts."</p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center font-bold text-purple-700 text-sm">MR</div>
+          <div>
+            <div class="text-sm font-semibold">Marcus Rivera</div>
+            <div class="text-xs text-surface-800/40">CTO, Acme Corp</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FAQ (Tailwind) ─── -->
+<section id="faq" class="py-24 px-8 lg:px-16 max-w-3xl mx-auto">
+  <div class="text-center mb-12">
+    <span class="text-sm font-semibold text-brand-600 uppercase tracking-wider">FAQ</span>
+    <h2 class="text-4xl font-extrabold mt-2">Common questions</h2>
+  </div>
+
+  <div class="space-y-4">
+    <details class="group border border-surface-200 rounded-xl p-5">
+      <summary class="flex items-center justify-between cursor-pointer text-base font-semibold">
+        Is there a free plan?
+        <span class="text-brand-600 group-open:rotate-45 transition-transform text-xl">+</span>
+      </summary>
+      <p class="mt-3 text-sm text-surface-800/60 leading-relaxed">Yes! Our free plan includes 3 projects with access to basic components. No credit card required.</p>
+    </details>
+    <details class="group border border-surface-200 rounded-xl p-5">
+      <summary class="flex items-center justify-between cursor-pointer text-base font-semibold">
+        What frameworks does code export support?
+        <span class="text-brand-600 group-open:rotate-45 transition-transform text-xl">+</span>
+      </summary>
+      <p class="mt-3 text-sm text-surface-800/60 leading-relaxed">We support React, Vue, Svelte, and plain HTML. Styling options include Tailwind CSS, CSS Modules, and Styled Components.</p>
+    </details>
+    <details class="group border border-surface-200 rounded-xl p-5">
+      <summary class="flex items-center justify-between cursor-pointer text-base font-semibold">
+        Can I use my own design system?
+        <span class="text-brand-600 group-open:rotate-45 transition-transform text-xl">+</span>
+      </summary>
+      <p class="mt-3 text-sm text-surface-800/60 leading-relaxed">Absolutely. Import your design tokens, fonts, and color palette. Synth will use them across all AI-generated designs.</p>
+    </details>
+    <details class="group border border-surface-200 rounded-xl p-5">
+      <summary class="flex items-center justify-between cursor-pointer text-base font-semibold">
+        How does the AI canvas work?
+        <span class="text-brand-600 group-open:rotate-45 transition-transform text-xl">+</span>
+      </summary>
+      <p class="mt-3 text-sm text-surface-800/60 leading-relaxed">Describe your layout in plain language. Our AI interprets your intent, generates a responsive design, and renders it live on the canvas.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ─── CTA (mixed: gradient text CSS + Tailwind layout) ─── -->
+<section class="py-24 px-8 text-center bg-surface-50">
+  <h2 class="text-4xl md:text-5xl font-extrabold mb-4">Ready to <span class="text-gradient">design smarter</span>?</h2>
+  <p class="text-surface-800/60 text-lg mb-10 max-w-md mx-auto">Join 12,000+ designers and developers shipping faster with Synth.</p>
+  <div class="flex flex-col sm:flex-row gap-4 justify-center">
+    <a href="#" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-10 py-4 rounded-xl text-base transition-colors">Start Free Trial</a>
+    <a href="#" class="border-2 border-surface-200 text-surface-800 font-semibold px-10 py-4 rounded-xl hover:border-brand-600 hover:text-brand-600 transition-colors text-base">Schedule Demo</a>
+  </div>
+</section>
+
+<!-- ─── Footer (mixed: custom CSS wave + Tailwind) ─── -->
+<footer class="footer-wave pt-20 pb-10 px-8 lg:px-16 text-white">
+  <div class="max-w-6xl mx-auto">
+    <div class="grid md:grid-cols-4 gap-10 mb-12">
+      <div>
+        <div class="text-xl font-extrabold mb-4">Synth</div>
+        <p class="text-sm text-white/50 leading-relaxed">AI-powered design studio for modern teams.</p>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold mb-4 text-white/80">Product</h4>
+        <ul class="space-y-2 text-sm text-white/50">
+          <li><a href="#" class="hover:text-white transition-colors">Features</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Pricing</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Changelog</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Roadmap</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold mb-4 text-white/80">Company</h4>
+        <ul class="space-y-2 text-sm text-white/50">
+          <li><a href="#" class="hover:text-white transition-colors">About</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold mb-4 text-white/80">Legal</h4>
+        <ul class="space-y-2 text-sm text-white/50">
+          <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Cookie Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p class="text-xs text-white/40">© 2026 Synth Inc. All rights reserved.</p>
+      <div class="flex gap-6 text-xs text-white/40">
+        <a href="#" class="hover:text-white transition-colors">Twitter</a>
+        <a href="#" class="hover:text-white transition-colors">GitHub</a>
+        <a href="#" class="hover:text-white transition-colors">Discord</a>
+        <a href="#" class="hover:text-white transition-colors">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
