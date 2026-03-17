@@ -158,7 +158,7 @@ AI tools (and GitHub Copilot via `.github/copilot-instructions.md`) read this fi
 
 ## Author
 
-So Eun Ahn
+sso-ss
 
 ## License
 

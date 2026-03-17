@@ -155,7 +155,7 @@ AI 도구들(그리고 `.github/copilot-instructions.md`를 통한 GitHub Copilo
 
 ## 만든 사람
 
-안소은 · So Eun Ahn
+sso-ss
 
 ## 라이선스
 
