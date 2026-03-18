@@ -597,7 +597,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     background: #484f58; border-radius: 9px; cursor: pointer;
     transition: background 0.2s ease; flex-shrink: 0;
   }
-  .toggle-switch.on { background: #3B82F6; }
+  .toggle-switch.on { background: #6C5CE7; }
   .toggle-switch::after {
     content: ''; position: absolute; top: 2px; left: 2px;
     width: 14px; height: 14px; background: #fff; border-radius: 50%;
@@ -613,14 +613,14 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     border-radius: 4px; padding: 2px 4px; font-size: 11px;
     font-family: inherit; cursor: pointer; outline: none; flex: 1; min-width: 0;
   }
-  #uiDimRow select:focus { border-color: #58a6ff; }
+  #uiDimRow select:focus { border-color: #6C5CE7; }
   #uiDimRow input[type=number] {
     width: 48px; background: #161b22; color: #c9d1d9;
     border: 1px solid #30363d; border-radius: 4px; padding: 2px 4px;
     font-size: 11px; text-align: center; outline: none;
     font-family: 'SF Mono', Consolas, monospace;
   }
-  #uiDimRow input[type=number]:focus { border-color: #58a6ff; }
+  #uiDimRow input[type=number]:focus { border-color: #6C5CE7; }
   #uiDimRow .x-label { color: #484f58; font-size: 10px; }
   #uiDimRow .swap-btn {
     background: #161b22; color: #8b949e; border: 1px solid #30363d;
@@ -634,7 +634,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     font-size: 11px; color: #8b949e; white-space: nowrap;
     overflow: hidden; text-overflow: ellipsis;
   }
-  #uiStatus .el-tag { color: #58a6ff; font-family: 'SF Mono', Consolas, monospace; }
+  #uiStatus .el-tag { color: #a29bfe; font-family: 'SF Mono', Consolas, monospace; }
   #uiStatus { cursor: pointer; }
   #uiStatus:hover { background: #161b22; }
   #propsPanel {
@@ -723,14 +723,14 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     padding: 4px 6px; font-size: 11px; outline: none;
     font-family: \'SF Mono\', Consolas, monospace; text-transform: uppercase;
   }
-  .cp-hex-input:focus { border-color: #58a6ff; }
+  .cp-hex-input:focus { border-color: #6C5CE7; }
   .cp-alpha-input {
     width: 44px; background: #161b22; color: #c9d1d9;
     border: 1px solid #30363d; border-radius: 5px;
     padding: 4px 4px; font-size: 11px; outline: none; text-align: center;
     font-family: \'SF Mono\', Consolas, monospace;
   }
-  .cp-alpha-input:focus { border-color: #58a6ff; }
+  .cp-alpha-input:focus { border-color: #6C5CE7; }
   .cp-percent { color: #6e7681; font-size: 11px; }
   .prop-num {
     width: 60px; background: #161b22; color: #c9d1d9;
@@ -738,7 +738,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     padding: 2px 4px; font-size: 11px; text-align: center; outline: none;
     font-family: 'SF Mono', Consolas, monospace;
   }
-  .prop-num:focus { border-color: #58a6ff; }
+  .prop-num:focus { border-color: #6C5CE7; }
   .prop-num::placeholder { color: #484f58; font-style: italic; }
   .unit-label { color: #484f58; font-size: 10px; flex-shrink: 0; }
   .prop-select {
@@ -754,13 +754,13 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   }
   #resetBtn:hover { color: #c9d1d9; border-color: #484f58; }
   #applyBtn {
-    flex: 2; background: #238636; color: #fff;
-    border: 1px solid #2ea043; border-radius: 6px; padding: 6px 8px;
+    flex: 2; background: #6C5CE7; color: #fff;
+    border: 1px solid #5a4bd1; border-radius: 6px; padding: 6px 8px;
     font-size: 11px; cursor: pointer; font-family: inherit; font-weight: 600;
     transition: all 0.15s ease;
   }
-  #applyBtn:hover { background: #2ea043; }
-  #applyBtn:active { background: #196c2e; }
+  #applyBtn:hover { background: #7c6eeb; }
+  #applyBtn:active { background: #5a4bd1; }
   .btn-row { display: none; gap: 6px; padding: 8px 12px; border-top: 1px solid #21262d; flex-shrink: 0; }
   .btn-row.open { display: flex; }
   .radius-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -771,7 +771,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     flex-shrink: 0; transition: all 0.15s;
   }
   .radius-toggle:hover { color: #c9d1d9; border-color: #484f58; }
-  .radius-toggle.active { color: #58a6ff; border-color: #58a6ff; }
+  .radius-toggle.active { color: #a29bfe; border-color: #6C5CE7; }
   .radius-corners { display: none; gap: 4px; padding: 4px 0 0; }
   .radius-corners.open { display: grid; grid-template-columns: 1fr 1fr; }
   .corner-row {
@@ -791,7 +791,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     padding: 2px 3px; font-size: 10px; text-align: center; outline: none;
     font-family: 'SF Mono', Consolas, monospace;
   }
-  .corner-num:focus { border-color: #58a6ff; }
+  .corner-num:focus { border-color: #6C5CE7; }
   .align-btn-group {
     display: flex; background: #161b22; border: 1px solid #30363d;
     border-radius: 6px; padding: 2px; gap: 1px;
@@ -803,7 +803,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     padding: 0; flex-shrink: 0; transition: color 0.12s, background 0.12s;
   }
   .align-btn:hover { color: #c9d1d9; background: #21262d; }
-  .align-btn.active { color: #58a6ff; background: #1f3254; }
+  .align-btn.active { color: #a29bfe; background: #2d2654; }
   .pad-icon { width: 14px; height: 14px; color: #484f58; flex-shrink: 0; display: block; }
   .stroke-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -1839,7 +1839,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     }).then(function(r) { return r.json(); }).then(function(d) {
       if (d.ok) {
         applyBtn.textContent = '\u2713 Applied';
-        applyBtn.style.background = '#196c2e';
+        applyBtn.style.background = '#5a4bd1';
         // Reload iframe to reflect source changes, then re-select the same element
         var selectorToRestore = lastSelectedSelector;
         iframe.addEventListener('load', function onReload() {
@@ -1993,8 +1993,8 @@ function getInspectorScript(serverPort: number): string {
     hoverOverlay.setAttribute('data-inspect-canvas', '');
     Object.assign(hoverOverlay.style, {
       position: 'fixed', pointerEvents: 'none', zIndex: '2147483646',
-      border: '2px solid #3B82F6', borderRadius: '2px',
-      backgroundColor: 'rgba(59,130,246,0.08)',
+      border: '2px solid #6C5CE7', borderRadius: '2px',
+      backgroundColor: 'rgba(108,92,231,0.08)',
       transition: 'all 0.1s ease', display: 'none',
     });
     document.documentElement.appendChild(hoverOverlay);
