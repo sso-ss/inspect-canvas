@@ -606,27 +606,29 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   .toggle-switch.on::after { transform: translateX(14px); }
   #uiDimRow {
     display: flex; align-items: center; gap: 6px;
-    padding: 0 12px 10px 12px; border-top: 1px solid #21262d;
-    padding-top: 8px; margin-top: 2px;
+    padding: 4px 12px 8px 12px; border-top: 1px solid #21262d;
   }
   #uiDimRow select {
-    background: #21262d; color: #c9d1d9; border: 1px solid #30363d;
-    border-radius: 6px; padding: 3px 6px; font-size: 11px;
-    font-family: inherit; cursor: pointer; outline: none; max-width: 130px;
+    background: #161b22; color: #c9d1d9; border: 1px solid #30363d;
+    border-radius: 4px; padding: 2px 4px; font-size: 11px;
+    font-family: inherit; cursor: pointer; outline: none; flex: 1; min-width: 0;
   }
+  #uiDimRow select:focus { border-color: #58a6ff; }
   #uiDimRow input[type=number] {
-    width: 48px; background: #21262d; color: #c9d1d9;
-    border: 1px solid #30363d; border-radius: 6px; padding: 3px 4px;
+    width: 48px; background: #161b22; color: #c9d1d9;
+    border: 1px solid #30363d; border-radius: 4px; padding: 2px 4px;
     font-size: 11px; text-align: center; outline: none;
     font-family: 'SF Mono', Consolas, monospace;
   }
-  #uiDimRow .x-label { color: #484f58; font-size: 11px; }
+  #uiDimRow input[type=number]:focus { border-color: #58a6ff; }
+  #uiDimRow .x-label { color: #484f58; font-size: 10px; }
   #uiDimRow .swap-btn {
-    background: #21262d; color: #8b949e; border: 1px solid #30363d;
-    border-radius: 6px; width: 24px; height: 24px; cursor: pointer;
-    font-size: 12px; display: flex; align-items: center; justify-content: center;
+    background: #161b22; color: #8b949e; border: 1px solid #30363d;
+    border-radius: 4px; width: 22px; height: 22px; cursor: pointer;
+    font-size: 11px; display: flex; align-items: center; justify-content: center;
+    padding: 0; flex-shrink: 0;
   }
-  #uiDimRow .swap-btn:hover { color: #c9d1d9; }
+  #uiDimRow .swap-btn:hover { color: #c9d1d9; border-color: #484f58; }
   #uiStatus {
     display: none; padding: 6px 12px; border-top: 1px solid #21262d;
     font-size: 11px; color: #8b949e; white-space: nowrap;
@@ -824,6 +826,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   .sec-remove-btn:hover { color: #f85149; border-color: #f85149; }
   #strokeControls { display: none; }
   #strokeControls.open { display: block; }
+  #hideToggle.hidden-active { color: #f85149; opacity: 0.7; }
 </style>
 </head>
 <body>
@@ -866,31 +869,8 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   <div id="propsPanel">
     <div class="prop-section" id="secPosition">
       <div class="prop-section-title">Position</div>
-      <div class="prop-row">
-        <span class="prop-label">Display</span>
-        <select class="prop-select" id="displaySel">
-          <option value="block">Stack</option>
-          <option value="flex">Flex</option>
-          <option value="grid">Grid</option>
-          <option value="none">Hidden</option>
-        </select>
-      </div>
       <div id="layoutFlexControls" style="display:none">
         <div id="flexOnlyControls">
-        <div class="prop-row">
-          <span class="prop-label">Direction</span>
-          <div class="align-btn-group" id="directionBtns">
-            <button class="align-btn" data-prop="flexDirection" data-val="row" title="Row">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1.5" y="4.5" width="3" height="5" rx="0.5" opacity="0.9"/><rect x="5.5" y="4.5" width="3" height="5" rx="0.5" opacity="0.6"/><rect x="9.5" y="4.5" width="3" height="5" rx="0.5" opacity="0.35"/></svg>
-            </button>
-            <button class="align-btn" data-prop="flexDirection" data-val="column" title="Column">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="3" y="1.5" width="8" height="3" rx="0.5" opacity="0.9"/><rect x="3" y="5.5" width="8" height="3" rx="0.5" opacity="0.6"/><rect x="3" y="9.5" width="8" height="3" rx="0.5" opacity="0.35"/></svg>
-            </button>
-            <button class="align-btn" data-prop="flexWrap" data-val="wrap" title="Wrap">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="3" width="4" height="3.5" rx="0.5" fill="currentColor" stroke="none" opacity="0.7"/><rect x="6.5" y="3" width="4" height="3.5" rx="0.5" fill="currentColor" stroke="none" opacity="0.7"/><rect x="1.5" y="7.5" width="4" height="3.5" rx="0.5" fill="currentColor" stroke="none" opacity="0.4"/></svg>
-            </button>
-          </div>
-        </div>
         <div class="prop-row">
           <span class="prop-label">Align</span>
           <div style="display:flex;gap:3px;align-items:center;">
@@ -908,15 +888,6 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
           </div>
         </div>
         </div>
-        <div class="prop-row">
-          <span class="prop-label">Gap</span>
-          <input type="number" class="prop-num" id="gapNum" min="0" max="999">
-          <span class="unit-label">px</span>
-        </div>
-      </div>
-      <div class="prop-row">
-        <span class="prop-label">Sticky</span>
-        <div class="toggle-switch" id="stickyToggle"></div>
       </div>
       <div class="prop-row">
         <span class="prop-label">X</span>
@@ -928,36 +899,84 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
         <input type="number" class="prop-num" id="translateY" placeholder="0">
         <span class="unit-label">px</span>
       </div>
-    </div>
-    <div class="prop-section" id="secSpacing">
-      <div class="prop-section-title">Spacing</div>
-      <div class="radius-header">
-        <span class="prop-label">Padding</span>
-        <input type="text" class="prop-num" id="paddingNum" min="0" max="999">
-        <span class="unit-label">px</span>
-        <button class="radius-toggle" id="paddingExpandBtn" title="Per-side padding">&#9699;</button>
+      <div class="prop-row">
+        <span class="prop-label">Sticky</span>
+        <div class="toggle-switch" id="stickyToggle"></div>
       </div>
-      <div class="radius-corners" id="paddingSides">
-        <div class="corner-row"><svg class="pad-icon" viewBox="0 0 14 14" fill="none"><rect x="3" y="5" width="8" height="6" stroke="currentColor" stroke-width="1.2" rx="0.5"/><line x1="3" y1="2.5" x2="11" y2="2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="number" class="prop-num" id="pTop" min="0" max="999" placeholder="T"></div>
-        <div class="corner-row"><svg class="pad-icon" viewBox="0 0 14 14" fill="none"><rect x="3" y="3" width="6" height="8" stroke="currentColor" stroke-width="1.2" rx="0.5"/><line x1="11.5" y1="3" x2="11.5" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="number" class="prop-num" id="pRight" min="0" max="999" placeholder="R"></div>
-        <div class="corner-row"><svg class="pad-icon" viewBox="0 0 14 14" fill="none"><rect x="3" y="3" width="8" height="6" stroke="currentColor" stroke-width="1.2" rx="0.5"/><line x1="3" y1="11.5" x2="11" y2="11.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="number" class="prop-num" id="pBottom" min="0" max="999" placeholder="B"></div>
-        <div class="corner-row"><svg class="pad-icon" viewBox="0 0 14 14" fill="none"><rect x="5" y="3" width="6" height="8" stroke="currentColor" stroke-width="1.2" rx="0.5"/><line x1="2.5" y1="3" x2="2.5" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="number" class="prop-num" id="pLeft" min="0" max="999" placeholder="L"></div>
+    </div>
+    <div class="prop-section" id="secLayout">
+      <div class="prop-section-title">Layout</div>
+        <div class="prop-row">
+          <span class="prop-label">Direction</span>
+          <div class="align-btn-group" id="directionBtns">
+            <button class="align-btn" data-prop="flexDirection" data-val="row" title="Row">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1.5" y="4.5" width="3" height="5" rx="0.5" opacity="0.9"/><rect x="5.5" y="4.5" width="3" height="5" rx="0.5" opacity="0.6"/><rect x="9.5" y="4.5" width="3" height="5" rx="0.5" opacity="0.35"/></svg>
+            </button>
+            <button class="align-btn" data-prop="flexDirection" data-val="column" title="Column">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="3" y="1.5" width="8" height="3" rx="0.5" opacity="0.9"/><rect x="3" y="5.5" width="8" height="3" rx="0.5" opacity="0.6"/><rect x="3" y="9.5" width="8" height="3" rx="0.5" opacity="0.35"/></svg>
+            </button>
+            <button class="align-btn" data-prop="display" data-val="grid" title="Grid">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="1.5" y="1.5" width="4.5" height="4.5" rx="0.5" opacity="0.9"/><rect x="8" y="1.5" width="4.5" height="4.5" rx="0.5" opacity="0.6"/><rect x="1.5" y="8" width="4.5" height="4.5" rx="0.5" opacity="0.6"/><rect x="8" y="8" width="4.5" height="4.5" rx="0.5" opacity="0.35"/></svg>
+            </button>
+            <button class="align-btn" data-prop="flexWrap" data-val="wrap" title="Wrap">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="3" width="4" height="3.5" rx="0.5" fill="currentColor" stroke="none" opacity="0.7"/><rect x="6.5" y="3" width="4" height="3.5" rx="0.5" fill="currentColor" stroke="none" opacity="0.7"/><rect x="1.5" y="7.5" width="4" height="3.5" rx="0.5" fill="currentColor" stroke="none" opacity="0.4"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="prop-row">
+          <span class="prop-label">W</span>
+          <input type="number" class="prop-num" id="elWidth" min="0" max="9999" placeholder="auto">
+          <span class="unit-label">px</span>
+        </div>
+        <div class="prop-row">
+          <span class="prop-label">H</span>
+          <input type="number" class="prop-num" id="elHeight" min="0" max="9999" placeholder="auto">
+          <span class="unit-label">px</span>
+        </div>
+        <div class="prop-row">
+          <span class="prop-label">Gap</span>
+          <input type="number" class="prop-num" id="gapNum" min="0" max="999">
+          <span class="unit-label">px</span>
+        </div>
+    </div>
+    <div class="prop-section" id="secSpacing" style="display:flex;flex-direction:column;gap:8px">
+      <div class="stroke-header">
+        <div class="prop-section-title" style="margin-bottom:0">Appearance</div>
+        <button class="sec-add-btn" id="hideToggle" title="Toggle visibility" style="border:none">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2.5"/></svg>
+        </button>
+      </div>
+      <div>
+        <div class="radius-header">
+          <span class="prop-label">Padding</span>
+          <input type="text" class="prop-num" id="paddingNum" min="0" max="999">
+          <span class="unit-label">px</span>
+          <button class="radius-toggle" id="paddingExpandBtn" title="Per-side padding">&#9699;</button>
+        </div>
+        <div class="radius-corners" id="paddingSides">
+          <div class="corner-row"><svg class="pad-icon" viewBox="0 0 14 14" fill="none"><rect x="3" y="5" width="8" height="6" stroke="currentColor" stroke-width="1.2" rx="0.5"/><line x1="3" y1="2.5" x2="11" y2="2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="number" class="prop-num" id="pTop" min="0" max="999" placeholder="T"></div>
+          <div class="corner-row"><svg class="pad-icon" viewBox="0 0 14 14" fill="none"><rect x="3" y="3" width="6" height="8" stroke="currentColor" stroke-width="1.2" rx="0.5"/><line x1="11.5" y1="3" x2="11.5" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="number" class="prop-num" id="pRight" min="0" max="999" placeholder="R"></div>
+          <div class="corner-row"><svg class="pad-icon" viewBox="0 0 14 14" fill="none"><rect x="3" y="3" width="8" height="6" stroke="currentColor" stroke-width="1.2" rx="0.5"/><line x1="3" y1="11.5" x2="11" y2="11.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="number" class="prop-num" id="pBottom" min="0" max="999" placeholder="B"></div>
+          <div class="corner-row"><svg class="pad-icon" viewBox="0 0 14 14" fill="none"><rect x="5" y="3" width="6" height="8" stroke="currentColor" stroke-width="1.2" rx="0.5"/><line x1="2.5" y1="3" x2="2.5" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="number" class="prop-num" id="pLeft" min="0" max="999" placeholder="L"></div>
+        </div>
+      </div>
+      <div>
+        <div class="radius-header">
+          <span class="prop-label">Radius</span>
+          <input type="number" class="prop-num" id="radiusNum" min="0" max="999">
+          <span class="unit-label">px</span>
+          <button class="radius-toggle" id="radiusExpandBtn" title="Per-corner radius">&#9699;</button>
+        </div>
+        <div class="radius-corners" id="radiusCorners">
+          <div class="corner-row"><div class="corner-icon tl"></div><input type="number" class="corner-num" id="rTL" min="0" max="999" placeholder="TL"></div>
+          <div class="corner-row"><div class="corner-icon tr"></div><input type="number" class="corner-num" id="rTR" min="0" max="999" placeholder="TR"></div>
+          <div class="corner-row"><div class="corner-icon bl"></div><input type="number" class="corner-num" id="rBL" min="0" max="999" placeholder="BL"></div>
+          <div class="corner-row"><div class="corner-icon br"></div><input type="number" class="corner-num" id="rBR" min="0" max="999" placeholder="BR"></div>
+        </div>
       </div>
     </div>
     <div class="prop-section" id="secBorder">
       <div class="prop-section-title">Border</div>
-      <div class="radius-header">
-        <span class="prop-label">Radius</span>
-        <input type="number" class="prop-num" id="radiusNum" min="0" max="999">
-        <span class="unit-label">px</span>
-        <button class="radius-toggle" id="radiusExpandBtn" title="Per-corner radius">&#9699;</button>
-      </div>
-      <div class="radius-corners" id="radiusCorners">
-        <div class="corner-row"><div class="corner-icon tl"></div><input type="number" class="corner-num" id="rTL" min="0" max="999" placeholder="TL"></div>
-        <div class="corner-row"><div class="corner-icon tr"></div><input type="number" class="corner-num" id="rTR" min="0" max="999" placeholder="TR"></div>
-        <div class="corner-row"><div class="corner-icon bl"></div><input type="number" class="corner-num" id="rBL" min="0" max="999" placeholder="BL"></div>
-        <div class="corner-row"><div class="corner-icon br"></div><input type="number" class="corner-num" id="rBR" min="0" max="999" placeholder="BR"></div>
-      </div>
     </div>
     <div class="prop-section" id="secType">
       <div class="prop-section-title">Typography</div>
@@ -1029,17 +1048,6 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
           <input type="number" class="prop-num" id="strokeWidthNum" min="0" max="100">
           <span class="unit-label">px</span>
         </div>
-      </div>
-    </div>
-    <div class="prop-section" id="secDims">
-      <div class="prop-section-title">Dimensions</div>
-      <div class="prop-row">
-        <span class="prop-label">W × H</span>
-        <span class="prop-value" id="sizeValue"></span>
-      </div>
-      <div class="prop-row">
-        <span class="prop-label">Display</span>
-        <span class="prop-value" id="displayValue"></span>
       </div>
     </div>
   </div>
@@ -1135,12 +1143,11 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   const stickyToggle = document.getElementById('stickyToggle');
   const translateXNum = document.getElementById('translateX');
   const translateYNum = document.getElementById('translateY');
-  const displaySel = document.getElementById('displaySel');
   const layoutFlexControls = document.getElementById('layoutFlexControls');
   const gapNum = document.getElementById('gapNum');
+  const elWidth = document.getElementById('elWidth');
+  const elHeight = document.getElementById('elHeight');
   var currentDisplay = 'block';
-  const sizeValue = document.getElementById('sizeValue');
-  const displayValue = document.getElementById('displayValue');
   const resetBtn = document.getElementById('resetBtn');
   const applyBtn = document.getElementById('applyBtn');
 
@@ -1383,6 +1390,8 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     if (dirtyProps.has('top')) o.top = stickyToggle.classList.contains('on') ? '0px' : 'auto';
     if (dirtyProps.has('transform')) o.transform = 'translate(' + (translateXNum.value || '0') + 'px, ' + (translateYNum.value || '0') + 'px)';
     if (dirtyProps.has('display')) o.display = currentDisplay;
+    if (dirtyProps.has('width')) o.width = elWidth.value ? elWidth.value + 'px' : 'auto';
+    if (dirtyProps.has('height')) o.height = elHeight.value ? elHeight.value + 'px' : 'auto';
     if (dirtyProps.has('flexDirection')) { var fdb = document.querySelector('#directionBtns .align-btn[data-prop="flexDirection"].active'); if (fdb) o.flexDirection = fdb.dataset.val; }
     if (dirtyProps.has('flexWrap')) o.flexWrap = document.querySelector('#directionBtns .align-btn[data-prop="flexWrap"]')?.classList.contains('active') ? 'wrap' : 'nowrap';
     if (dirtyProps.has('justifyContent')) { var jab = window._lastAlignJustify; if (jab) o.justifyContent = jab; }
@@ -1466,10 +1475,10 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
       document.getElementById('secBorder').style.display = (hasRadius || isInteractive || isImage) ? '' : 'none';
       // Position: always show
       document.getElementById('secPosition').style.display = '';
+      // Layout: always show
+      document.getElementById('secLayout').style.display = '';
       // Spacing: always show
       document.getElementById('secSpacing').style.display = '';
-      // Dimensions: always show
-      document.getElementById('secDims').style.display = '';
 
       // Colors
       var bgCss = s.backgroundColor || 'transparent';
@@ -1539,22 +1548,33 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
       translateYNum.value = tyMatch ? Math.round(parseFloat(tyMatch[1])) || '' : '';
       // Layout
       currentDisplay = s.display || 'block';
-      var displayVal = currentDisplay;
-      if (displayVal === 'inline-flex') displayVal = 'flex';
-      if (displayVal === 'inline-grid') displayVal = 'grid';
-      if (displayVal === 'inline' || displayVal === 'inline-block') displayVal = 'block';
-      displaySel.value = displayVal;
+      var isHidden = currentDisplay === 'none';
       var isFlexGrid = currentDisplay === 'flex' || currentDisplay === 'inline-flex' || currentDisplay === 'grid' || currentDisplay === 'inline-grid';
       var isFlexOnly = currentDisplay === 'flex' || currentDisplay === 'inline-flex';
+      var isGrid = currentDisplay === 'grid' || currentDisplay === 'inline-grid';
+      // Hide toggle state
+      var ht = document.getElementById('hideToggle');
+      if (isHidden) {
+        ht.classList.add('hidden-active');
+        ht.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2.5"/><line x1="2" y1="14" x2="14" y2="2"/></svg>';
+      } else {
+        ht.classList.remove('hidden-active');
+        ht.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2.5"/></svg>';
+      }
+      // Direction buttons: highlight active state
+      document.querySelectorAll('#directionBtns .align-btn').forEach(function(b) {
+        if (b.dataset.prop === 'flexWrap') {
+          b.classList.toggle('active', isFlexOnly && (s.flexWrap === 'wrap' || s.flexWrap === 'wrap-reverse'));
+        } else if (b.dataset.prop === 'display' && b.dataset.val === 'grid') {
+          b.classList.toggle('active', isGrid);
+        } else if (b.dataset.prop === 'flexDirection') {
+          b.classList.toggle('active', isFlexOnly && b.dataset.val === (s.flexDirection || 'row'));
+        }
+      });
+      // Show/hide align controls based on flex/grid
       layoutFlexControls.style.display = isFlexGrid ? '' : 'none';
       document.getElementById('flexOnlyControls').style.display = isFlexOnly ? '' : 'none';
       if (isFlexGrid) {
-        var fdv = s.flexDirection || 'row';
-        var fwv = s.flexWrap || 'nowrap';
-        document.querySelectorAll('#directionBtns .align-btn').forEach(function(b) {
-          if (b.dataset.prop === 'flexWrap') b.classList.toggle('active', fwv === 'wrap' || fwv === 'wrap-reverse');
-          else b.classList.toggle('active', b.dataset.val === fdv);
-        });
         var jv = s.justifyContent || 'normal';
         document.querySelectorAll('#justifyBtns .align-btn').forEach(function(b) {
           b.classList.remove('active');
@@ -1564,6 +1584,8 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
           b.classList.remove('active');
         });
         gapNum.value = Math.round(parsePx(s.gap)) || '';
+      } else {
+        gapNum.value = '';
       }
       // Spacing — individual padding sides
       var pdT = parsePx(s.paddingTop || s.padding);
@@ -1585,14 +1607,22 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
       if (!perSidePaddingMode) {
         paddingSides.classList.remove('open'); paddingExpandBtn.classList.remove('active');
       }
-      // Dimensions
-      sizeValue.textContent = d.size ? (d.size.width + ' \u00D7 ' + d.size.height + ' px') : '';
-      displayValue.textContent = (s.display || 'block') + (s.flexDirection ? ' / ' + s.flexDirection : '');
+      // Dimensions — populate W/H inputs
+      elWidth.value = d.size ? Math.round(d.size.width) : '';
+      elHeight.value = d.size ? Math.round(d.size.height) : '';
     }
   });
 
   // --- Property control handlers ---
   // Color pickers are handled by the swatch click handlers above
+  elWidth.addEventListener('change', function() {
+    dirtyProps.add('width');
+    sendOverride('width', this.value ? this.value + 'px' : 'auto');
+  });
+  elHeight.addEventListener('change', function() {
+    dirtyProps.add('height');
+    sendOverride('height', this.value ? this.value + 'px' : 'auto');
+  });
   strokeWidthNum.addEventListener('change', function() { dirtyProps.add('borderWidth'); sendOverride('borderWidth', this.value + 'px'); sendOverride('borderStyle', 'solid'); });
   strokeAddBtn.addEventListener('click', function() {
     dirtyProps.add('borderColor'); dirtyProps.add('borderWidth');
@@ -1682,16 +1712,28 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
   }
   translateXNum.addEventListener('change', sendTranslate);
   translateYNum.addEventListener('change', sendTranslate);
-  displaySel.addEventListener('change', function() {
-    currentDisplay = this.value;
+  gapNum.addEventListener('change', function() { dirtyProps.add('gap'); sendOverride('gap', this.value + 'px'); });
+  // Hide toggle (eye icon)
+  var hideToggle = document.getElementById('hideToggle');
+  hideToggle.addEventListener('click', function() {
+    var isHidden = this.classList.toggle('hidden-active');
+    if (isHidden) {
+      currentDisplay = 'none';
+      this.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2.5"/><line x1="2" y1="14" x2="14" y2="2"/></svg>';
+    } else {
+      currentDisplay = 'block';
+      this.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2.5"/></svg>';
+    }
     dirtyProps.add('display');
-    sendOverride('display', this.value);
-    var isFG = this.value === 'flex' || this.value === 'inline-flex' || this.value === 'grid' || this.value === 'inline-grid';
-    var isFO = this.value === 'flex' || this.value === 'inline-flex';
+    sendOverride('display', currentDisplay);
+  });
+  // Helper: update visibility of align/flex controls based on current display mode
+  function updateLayoutVisibility() {
+    var isFG = currentDisplay === 'flex' || currentDisplay === 'inline-flex' || currentDisplay === 'grid' || currentDisplay === 'inline-grid';
+    var isFO = currentDisplay === 'flex' || currentDisplay === 'inline-flex';
     layoutFlexControls.style.display = isFG ? '' : 'none';
     document.getElementById('flexOnlyControls').style.display = isFO ? '' : 'none';
-  });
-  gapNum.addEventListener('change', function() { dirtyProps.add('gap'); sendOverride('gap', this.value + 'px'); });
+  }
   document.querySelectorAll('.align-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var axis = this.dataset.axis;
@@ -1705,13 +1747,45 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
         sendOverride(prop, isActive ? 'nowrap' : 'wrap');
         return;
       }
-      // flexDirection — toggle only among row/column, leave wrap untouched
-      if (prop === 'flexDirection') {
-        dirtyProps.add(prop);
-        sendOverride(prop, val);
-        document.querySelectorAll('#directionBtns .align-btn[data-prop="flexDirection"]').forEach(function(b) {
-          b.classList.toggle('active', b === btn);
+      // Grid button — toggle grid display mode
+      if (prop === 'display' && val === 'grid') {
+        var wasGrid = this.classList.contains('active');
+        // Deactivate all direction buttons (row/column/grid) but leave wrap
+        document.querySelectorAll('#directionBtns .align-btn[data-prop="flexDirection"], #directionBtns .align-btn[data-prop="display"]').forEach(function(b) {
+          b.classList.remove('active');
         });
+        if (!wasGrid) {
+          this.classList.add('active');
+          currentDisplay = 'grid';
+        } else {
+          currentDisplay = 'block';
+        }
+        dirtyProps.add('display');
+        sendOverride('display', currentDisplay);
+        updateLayoutVisibility();
+        return;
+      }
+      // flexDirection — toggle among row/column, also sets display:flex implicitly
+      if (prop === 'flexDirection') {
+        var wasActive = this.classList.contains('active');
+        // Deactivate all direction buttons (row/column/grid) but leave wrap
+        document.querySelectorAll('#directionBtns .align-btn[data-prop="flexDirection"], #directionBtns .align-btn[data-prop="display"]').forEach(function(b) {
+          b.classList.remove('active');
+        });
+        if (!wasActive) {
+          this.classList.add('active');
+          currentDisplay = 'flex';
+          dirtyProps.add('display');
+          dirtyProps.add('flexDirection');
+          sendOverride('display', 'flex');
+          sendOverride('flexDirection', val);
+        } else {
+          // Deselect → back to block
+          currentDisplay = 'block';
+          dirtyProps.add('display');
+          sendOverride('display', 'block');
+        }
+        updateLayoutVisibility();
         return;
       }
       // For H/V align buttons, resolve correct CSS property based on flex-direction
@@ -1939,10 +2013,11 @@ function getInspectorScript(serverPort: number): string {
     tooltip.setAttribute('data-inspect-canvas', '');
     Object.assign(tooltip.style, {
       position: 'fixed', pointerEvents: 'none', zIndex: '2147483647',
-      background: '#1e293b', color: '#f8fafc', fontSize: '12px',
+      background: '#1e293b', color: '#f8fafc', fontSize: '11px',
       fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-      padding: '4px 8px', borderRadius: '4px', whiteSpace: 'nowrap',
-      display: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+      padding: '6px 10px', borderRadius: '6px', whiteSpace: 'nowrap',
+      display: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+      lineHeight: '1.5', maxWidth: '320px',
     });
     document.documentElement.appendChild(tooltip);
 
@@ -2043,6 +2118,81 @@ function getInspectorScript(serverPort: number): string {
     return tag;
   }
 
+  // --- Accessibility helpers ---
+  function parseRgb(c) {
+    if (!c || c === 'transparent' || c === 'rgba(0, 0, 0, 0)') return null;
+    var m = c.match(/(\\d+(?:\\.\\d+)?)/g);
+    if (!m || m.length < 3) return null;
+    var a = m.length >= 4 ? parseFloat(m[3]) : 1;
+    return { r: parseInt(m[0]), g: parseInt(m[1]), b: parseInt(m[2]), a: a };
+  }
+  function blendOnBg(fg, bg) {
+    if (!fg || fg.a >= 1) return fg;
+    var a = fg.a;
+    return { r: Math.round(fg.r * a + bg.r * (1 - a)), g: Math.round(fg.g * a + bg.g * (1 - a)), b: Math.round(fg.b * a + bg.b * (1 - a)), a: 1 };
+  }
+  function relativeLuminance(rgb) {
+    var rs = rgb.r / 255, gs = rgb.g / 255, bs = rgb.b / 255;
+    var r = rs <= 0.03928 ? rs / 12.92 : Math.pow((rs + 0.055) / 1.055, 2.4);
+    var g = gs <= 0.03928 ? gs / 12.92 : Math.pow((gs + 0.055) / 1.055, 2.4);
+    var b = bs <= 0.03928 ? bs / 12.92 : Math.pow((bs + 0.055) / 1.055, 2.4);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  function contrastRatio(l1, l2) {
+    var lighter = Math.max(l1, l2), darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+  function getEffectiveBg(el) {
+    var layers = [];
+    var cur = el;
+    while (cur && cur !== document.documentElement) {
+      var bg = window.getComputedStyle(cur).backgroundColor;
+      var parsed = parseRgb(bg);
+      if (parsed && parsed.a > 0) {
+        layers.unshift(parsed);
+        if (parsed.a >= 1) break; // opaque — no need to go further
+      }
+      cur = cur.parentElement;
+    }
+    // Start from white and blend each layer on top
+    var result = { r: 255, g: 255, b: 255, a: 1 };
+    for (var i = 0; i < layers.length; i++) {
+      result = blendOnBg(layers[i], result);
+    }
+    return result;
+  }
+  function getAccessibleName(el) {
+    if (el.getAttribute('aria-label')) return el.getAttribute('aria-label');
+    if (el.getAttribute('aria-labelledby')) {
+      var ids = el.getAttribute('aria-labelledby').split(/\\s+/);
+      var names = ids.map(function(id) { var e = document.getElementById(id); return e ? (e.textContent || '').trim() : ''; }).filter(Boolean);
+      if (names.length) return names.join(' ');
+    }
+    if (el.tagName === 'IMG') return el.alt || '';
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
+      if (el.getAttribute('aria-label')) return el.getAttribute('aria-label');
+      if (el.labels && el.labels.length) return (el.labels[0].textContent || '').trim();
+      if (el.placeholder) return el.placeholder;
+      return '';
+    }
+    var text = (el.textContent || '').trim();
+    return text.length > 40 ? text.slice(0, 40) + '…' : text;
+  }
+  function getRole(el) {
+    if (el.getAttribute('role')) return el.getAttribute('role');
+    var tag = el.tagName;
+    var roleMap = { A: 'link', BUTTON: 'button', INPUT: 'textbox', SELECT: 'combobox', TEXTAREA: 'textbox', IMG: 'img', NAV: 'navigation', MAIN: 'main', HEADER: 'banner', FOOTER: 'contentinfo', ASIDE: 'complementary', SECTION: 'region', ARTICLE: 'article', FORM: 'form', TABLE: 'table', UL: 'list', OL: 'list', LI: 'listitem', H1: 'heading', H2: 'heading', H3: 'heading', H4: 'heading', H5: 'heading', H6: 'heading' };
+    if (tag === 'INPUT') {
+      var t = (el.type || 'text').toLowerCase();
+      if (t === 'checkbox') return 'checkbox';
+      if (t === 'radio') return 'radio';
+      if (t === 'submit' || t === 'button' || t === 'reset') return 'button';
+      if (t === 'range') return 'slider';
+      return 'textbox';
+    }
+    return roleMap[tag] || 'generic';
+  }
+
   function onHover(e) {
     if (!inspectEnabled) return;
     const raw = e.target;
@@ -2058,11 +2208,111 @@ function getInspectorScript(serverPort: number): string {
       top: rect.top + 'px', left: rect.left + 'px',
       width: rect.width + 'px', height: rect.height + 'px',
     });
-    const label = getLabel(el);
-    tooltip.textContent = label;
+    // Build rich tooltip
+    const cs = window.getComputedStyle(el);
+    const tag = el.tagName.toLowerCase();
+    const cls = (el.className && typeof el.className === 'string') ? el.className.trim().split(/\\s+/).slice(0, 4).join('.') : '';
+    const selectorShort = tag + (cls ? '.' + cls : '');
+    const w = Math.round(rect.width);
+    const h = Math.round(rect.height);
+    const bg = cs.backgroundColor || 'transparent';
+    const pd = cs.padding || '0px';
+    const mg = cs.margin || '0px';
+    const dp = cs.display;
+    // Color swatch helper
+    function swatch(c) {
+      if (!c || c === 'transparent' || c === 'rgba(0, 0, 0, 0)') return '';
+      return '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:' + c + ';border:1px solid rgba(255,255,255,0.2);vertical-align:middle;margin-right:4px"></span>';
+    }
+    var row = function(label, val) { return '<div style="display:flex;gap:12px;margin-bottom:2px"><span style="color:#8b949e;min-width:52px">' + label + '</span><span style="color:#c9d1d9;font-family:SF Mono,Consolas,monospace;font-size:11px">' + val + '</span></div>'; };
+    var lines = [];
+    lines.push('<div style="color:#93c5fd;font-size:11px;font-family:SF Mono,Consolas,monospace;overflow:hidden;text-overflow:ellipsis;max-width:290px;margin-bottom:3px">' + selectorShort + '</div>');
+    lines.push(row('Size', w + ' × ' + h));
+    if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+      lines.push('<div style="display:flex;gap:12px;margin-bottom:2px"><span style="color:#8b949e;min-width:52px">BG</span><span style="color:#c9d1d9">' + swatch(bg) + bg + '</span></div>');
+    }
+    lines.push(row('Padding', pd));
+    if (mg !== '0px') lines.push(row('Margin', mg));
+    lines.push(row('Display', dp + (cs.flexDirection && dp.indexOf('flex') >= 0 ? ' / ' + cs.flexDirection : '')));
+
+    // --- Accessibility section ---
+    lines.push('<div style="border-top:1px solid #30363d;margin:4px 0 3px;padding-top:4px;color:#6e7681;font-size:9px;text-transform:uppercase;letter-spacing:0.5px">A11Y</div>');
+
+    // Contrast ratio (for elements with visible text)
+    var hasText = el.textContent && el.textContent.trim().length > 0;
+    // Only compute contrast if the element itself renders text (has direct text or is a leaf-like element)
+    var isTextElement = false;
+    if (hasText) {
+      var childNodes = el.childNodes;
+      for (var ci = 0; ci < childNodes.length; ci++) {
+        if (childNodes[ci].nodeType === 3 && childNodes[ci].textContent.trim()) { isTextElement = true; break; }
+      }
+      // Also count elements that only have inline children (spans, strongs, ems, etc.)
+      if (!isTextElement) {
+        var inlineTags = ['SPAN', 'STRONG', 'EM', 'B', 'I', 'A', 'SMALL', 'SUB', 'SUP', 'MARK', 'CODE', 'BR'];
+        var allInline = true;
+        for (var ci2 = 0; ci2 < el.children.length; ci2++) {
+          if (inlineTags.indexOf(el.children[ci2].tagName) < 0) { allInline = false; break; }
+        }
+        if (allInline && el.children.length <= 5) isTextElement = true;
+      }
+      // Headings, paragraphs, labels, buttons, links always count
+      var textTags = ['H1','H2','H3','H4','H5','H6','P','LABEL','BUTTON','A','SPAN','LI','TD','TH','FIGCAPTION','BLOCKQUOTE'];
+      if (textTags.indexOf(el.tagName) >= 0) isTextElement = true;
+    }
+    if (isTextElement) {
+      var textColor = parseRgb(cs.color);
+      var bgColor = getEffectiveBg(el);
+      if (textColor && bgColor) {
+        var fgBlend = textColor.a < 1 ? blendOnBg(textColor, bgColor) : textColor;
+        var ratio = contrastRatio(relativeLuminance(fgBlend), relativeLuminance(bgColor));
+        var ratioStr = ratio.toFixed(2) + ':1';
+        var fontSize = parseFloat(cs.fontSize);
+        var isBold = parseInt(cs.fontWeight) >= 700;
+        var isLargeText = fontSize >= 24 || (fontSize >= 18.66 && isBold);
+        var aaThreshold = isLargeText ? 3 : 4.5;
+        var aaaThreshold = isLargeText ? 4.5 : 7;
+        var icon, color;
+        if (ratio >= aaaThreshold) { icon = '✅'; color = '#4ade80'; }
+        else if (ratio >= aaThreshold) { icon = '✅'; color = '#4ade80'; }
+        else { icon = '❌'; color = '#f87171'; }
+        var level = ratio >= aaaThreshold ? 'AAA' : (ratio >= aaThreshold ? 'AA' : 'Fail');
+        lines.push('<div style="display:flex;gap:12px;margin-bottom:2px;align-items:center"><span style="color:#8b949e;min-width:52px">Contrast</span><span style="font-family:SF Mono,Consolas,monospace;font-size:11px;color:' + color + '">' + ratioStr + ' ' + level + ' ' + icon + '</span></div>');
+      }
+    }
+
+    // Role
+    var role = getRole(el);
+    lines.push(row('Role', role));
+
+    // Accessible name (for interactive/semantic elements)
+    var interactiveTags = ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'IMG', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+    if (interactiveTags.indexOf(el.tagName) >= 0 || el.getAttribute('role') || el.getAttribute('tabindex')) {
+      var accName = getAccessibleName(el);
+      if (accName) {
+        lines.push('<div style="display:flex;gap:12px;margin-bottom:2px"><span style="color:#8b949e;min-width:52px">Name</span><span style="color:#c9d1d9;font-size:11px;overflow:hidden;text-overflow:ellipsis;max-width:200px">' + accName + '</span></div>');
+      } else if (interactiveTags.indexOf(el.tagName) >= 0) {
+        lines.push('<div style="display:flex;gap:12px;margin-bottom:2px"><span style="color:#8b949e;min-width:52px">Name</span><span style="color:#f87171;font-size:11px">⚠ Missing</span></div>');
+      }
+    }
+
+    // Keyboard focusable
+    var focusableTags = ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'];
+    var tabIdx = el.getAttribute('tabindex');
+    var isFocusable = focusableTags.indexOf(el.tagName) >= 0 || (tabIdx !== null && tabIdx !== '-1');
+    var shouldBeFocusable = el.getAttribute('role') === 'button' || el.getAttribute('role') === 'link' || el.style.cursor === 'pointer' || cs.cursor === 'pointer';
+    if (isFocusable || shouldBeFocusable) {
+      var kbIcon = isFocusable ? '<span style="color:#4ade80">✓</span>' : '<span style="color:#f87171">✗</span>';
+      lines.push('<div style="display:flex;gap:12px;margin-bottom:2px"><span style="color:#8b949e;min-width:52px">Keyboard</span>' + kbIcon + '</div>');
+    }
+
+    tooltip.innerHTML = lines.join('');
     tooltip.style.display = 'block';
-    tooltip.style.top = Math.max(0, rect.top - 28) + 'px';
-    tooltip.style.left = rect.left + 'px';
+    // Position tooltip: prefer below the element, fallback above
+    var tooltipTop = rect.bottom + 6;
+    if (tooltipTop + 160 > window.innerHeight) tooltipTop = Math.max(0, rect.top - 180);
+    tooltip.style.top = tooltipTop + 'px';
+    tooltip.style.left = Math.min(rect.left, window.innerWidth - 280) + 'px';
   }
 
   function getHoverStyles(el) {
