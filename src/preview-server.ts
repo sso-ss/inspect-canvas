@@ -975,9 +975,6 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
         </div>
       </div>
     </div>
-    <div class="prop-section" id="secBorder">
-      <div class="prop-section-title">Border</div>
-    </div>
     <div class="prop-section" id="secType">
       <div class="prop-section-title">Typography</div>
       <div class="prop-row">
@@ -1378,7 +1375,7 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
     if (dirtyProps.has('fontWeight') && document.getElementById('secType').style.display !== 'none') {
       o.fontWeight = fontWeightSel.value;
     }
-    if (dirtyProps.has('borderRadius') && document.getElementById('secBorder').style.display !== 'none') {
+    if (dirtyProps.has('borderRadius')) {
       var tl = rTL.value, tr = rTR.value, bl = rBL.value, br = rBR.value;
       if (tl === tr && tr === bl && bl === br) {
         o.borderRadius = tl + 'px';
@@ -1471,8 +1468,6 @@ function getShellHtml(targetUrl: string, serverPort: number, _isLocal = false): 
       }
       // Typography: show if text-bearing element
       document.getElementById('secType').style.display = isTextEl ? '' : 'none';
-      // Border radius: show if has radius, is interactive, or is image
-      document.getElementById('secBorder').style.display = (hasRadius || isInteractive || isImage) ? '' : 'none';
       // Position: always show
       document.getElementById('secPosition').style.display = '';
       // Layout: always show
