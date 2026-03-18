@@ -37,8 +37,13 @@ The goal is to let designers own that final 10% of polish themselves, without ne
 
 ## Features
 
-- **Figma-style properties panel** — Color picker, typography, spacing, layout, border radius, position, stroke
+- **Figma-style properties panel** — Layout, position, appearance, typography, fill, stroke — all in familiar controls
+- **Layout section** — Direction (Row, Column, Grid, Wrap), editable width/height, gap
+- **Appearance section** — Padding (per-side), border radius (per-corner), visibility toggle
+- **Color picker** — HSL gradient picker with hex input, alpha slider, and eyedropper
 - **Click to select** — Click any element in the preview to inspect and edit it
+- **Rich hover tooltip** — Hover any element to see selector, size, padding, margin, display — plus accessibility info
+- **A11Y contrast checker** — WCAG 2.1 contrast ratio with AA/AAA pass/fail, semantic role, accessible name, keyboard focusability
 - **Viewport presets** — Responsive preview with device presets (iPhone, iPad, desktop, full HD)
 - **Two modes** — Proxy a running dev server (`http://localhost:5173`) or serve a local folder directly
 - **Writes back to source** — Changes are patched directly into your source files (HTML/CSS, React + Tailwind, Next.js)
@@ -117,10 +122,11 @@ await startInspectServer({
 ## How it works
 
 1. **Open** — inspect-canvas wraps your site in a shell with a floating inspector panel
-2. **Click** — Click any element; the panel fills with its current properties
-3. **Edit** — Adjust values directly in the panel (color picker, number inputs, dropdowns)
-4. **Apply** — Hit Apply; changes are written back to your source files (HTML/CSS, React/Tailwind, Next.js)
-5. **AI assist** — A `.inspect-canvas.json` file is written to your project root with the selected element's full details, so you can tell your AI "update this element" and it knows exactly what to change
+2. **Hover** — Hover any element to see a tooltip with size, padding, display, and accessibility info (contrast ratio, role)
+3. **Click** — Click any element; the panel fills with its current properties
+4. **Edit** — Adjust values directly in the panel (color picker, number inputs, layout direction)
+5. **Apply** — Hit Apply; changes are written back to your source files (HTML/CSS, React/Tailwind, Next.js)
+6. **AI assist** — A `.inspect-canvas.json` file is written to your project root with the selected element's full details, so you can tell your AI "update this element" and it knows exactly what to change
 
 ---
 
@@ -141,7 +147,7 @@ Every click updates this file:
   "size": { "width": 640, "height": 72 },
   "position": { "x": 400, "y": 120 },
   "source": "src/Hero.tsx:14",
-  "instruction": "Make the font size 56px and color #3B82F6",
+  "instruction": "Make the font size 56px and color #6C5CE7",
   "timestamp": "2026-03-15T10:00:00.000Z"
 }
 ```

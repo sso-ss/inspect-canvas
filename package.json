@@ -1,6 +1,6 @@
 {
   "name": "inspect-canvas",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Click any element in the browser, then tell your AI to update it",
   "type": "module",
   "main": "dist/index.js",
